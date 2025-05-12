@@ -15,7 +15,7 @@ class UserProfile(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.user.username} User Profile"
+        return f"{self.user.username}"
     
     @property
     def username(self):
@@ -24,7 +24,7 @@ class UserProfile(models.Model):
 # Posts Model #
 STATUS_LIST = [
     ('draft', 'Draft'),
-    ('published', 'Published'),
+    ('publish', 'Publish'),
     ('archvied', 'Archived')
 ]
 class Post(models.Model):
@@ -74,7 +74,7 @@ LIKE_STATUS = [
     ('like', 'Like'),
     ('dislike', 'Dislike')
 ]
-# Likes Post Model #
+# Posts Like Model #
 class PostLike(models.Model):
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
@@ -88,7 +88,7 @@ class PostLike(models.Model):
     def __str__(self):
         return f"{self.user.username} - {self.status} - {self.post.pk}"
 
-# Likes Comment Model # 
+# Comments Like Model # 
 class CommentLike(models.Model):
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     comment = models.ForeignKey(Comment, on_delete=models.CASCADE)
