@@ -24,5 +24,5 @@ class PostLikeSerializer(ModelSerializer):
 
 class CommentLikeSerializer(ModelSerializer):
     class Meta:
-        model = PostLike
+        model = CommentLike
         fields = '__all__'

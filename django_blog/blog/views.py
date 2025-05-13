@@ -1,30 +1,25 @@
 from django.shortcuts import render
-from rest_framework.generics import GenericAPIView
-from rest_framework.mixins import *
+from rest_framework.reverse import reverse
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from .models import *
 from .serializers import *
 
-
-## Posts View ## 
-class PostsView(GenericAPIView, ListModelMixin, CreateModelMixin):
-    queryset = Post.objects.all()
-    serializer_class = PostSerializer
-
+# API Map View # 
+class APIMap(APIView):
+    """Blog API Map"""
     def get(self, request):
-        return self.list(request)
-    def post(self, request):
-        return self.create(request)
-    
-## Posts Manage View ##
-class PostsManageView(GenericAPIView, UpdateModelMixin, DestroyModelMixin, RetrieveModelMixin):
-    queryset = Post.objects.all()
+        return Response({
+            "posts": reverse('posts', request=request),
+            "posts-manage": reverse('posts-manage', kwargs = {"pk": 1}, request=request)
+        })
+
+# Posts View #
+class PostsView(ListCreateAPIView):
     serializer_class = PostSerializer
-
-    def get(self,request, pk):
-        return self.retrieve(request, pk)
-
-    def put(self,request, pk):
-        return self.update(request, pk)
-
-    def delete(self, request, pk):
-        return self.destroy(request, pk)
+    queryset = Post.objects.all()
+# Posts Manage View # 
+class PostsManageView(RetrieveUpdateDestroyAPIView):
+    serializer_class = PostSerializer
+    queryset = Post.objects.all()
