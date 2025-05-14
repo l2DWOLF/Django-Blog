@@ -4,9 +4,9 @@ from .views import *
 
 router = DefaultRouter()
 router.register('userprofiles', UserProfilesViewSet, basename='userprofiles')
-router.register('posts', PostsViewSet, basename='post')
+router.register('article', ArticlesViewSet, basename='article')
 router.register('comments',CommentsViewSet, basename='comment')
-router.register('post-likes', PostsLikeViewSet, basename='post-likes')
+router.register('article-likes', ArticlesLikeViewSet, basename='article-likes')
 router.register('comment-likes', CommentsLikeViewSet, basename='comment-likes')
 
 urlpatterns = [

@@ -10,20 +10,20 @@ class UserProfilesViewSet(ModelViewSet):
     queryset = UserProfile.objects.all()
     serializer_class = UserProfileSerializer
 
-# Posts Model View Set # 
-class PostsViewSet(ModelViewSet):
-    queryset = Post.objects.all()
-    serializer_class = PostSerializer
+# Articles Model View Set # 
+class ArticlesViewSet(ModelViewSet):
+    queryset = Article.objects.all()
+    serializer_class = ArticleSerializer
 
 # Comments Model View Set #
 class CommentsViewSet(ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
 
-# Posts Like Model View Set #
-class PostsLikeViewSet(ModelViewSet):
-    queryset = PostLike.objects.all()
-    serializer_class = PostLikeSerializer
+# Articles Like Model View Set #
+class ArticlesLikeViewSet(ModelViewSet):
+    queryset = ArticleLike.objects.all()
+    serializer_class = ArticleLikeSerializer
 # Comments Like Model View Set # 
 class CommentsLikeViewSet(ModelViewSet):
     queryset = CommentLike.objects.all()

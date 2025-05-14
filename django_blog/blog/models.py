@@ -19,13 +19,15 @@ class UserProfile(models.Model):
     def username(self):
         return self.user.username
     
-# Posts Model #
+# Articles Model #
 STATUS_LIST = [
     ('draft', 'Draft'),
     ('publish', 'Publish'),
     ('archvied', 'Archived')
 ]
-class Post(models.Model):
+
+
+class Article(models.Model):
     author = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     title = models.CharField(max_length=100, blank=False, null=False,
         unique=True, validators=[
@@ -51,7 +53,7 @@ class Post(models.Model):
 # Comments Model # 
 class Comment(models.Model):
     author = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
-    post = models.ForeignKey(Post, on_delete=models.CASCADE)
+    article = models.ForeignKey(Article, on_delete=models.CASCADE)
     reply_to = models.ForeignKey('self', null=True, blank=True,
                     default=None, on_delete=models.PROTECT)
     content = models.TextField(blank=False, null=False,
@@ -65,26 +67,28 @@ class Comment(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"by - {self.author.username} post - {self.post.pk}"
+        return f"by - {self.author.username} article - {self.article.pk}"
 
 # Likes Models #
 LIKE_STATUS = [
     ('like', 'Like'),
     ('dislike', 'Dislike')
 ]
-# Posts Like Model #
-class PostLike(models.Model):
+# Articles Like Model #
+
+
+class ArticleLike(models.Model):
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
-    post = models.ForeignKey(Post, on_delete=models.CASCADE)
+    article = models.ForeignKey(Article, on_delete=models.CASCADE)
     status = models.CharField(max_length=7, 
                 choices=LIKE_STATUS, default='like')
     created_at = models.DateTimeField(auto_now_add=True)
     # Prevent Multiple Likes
     class Meta:
-        unique_together = ['user', 'post']
+        unique_together = ['user', 'article']
 
     def __str__(self):
-        return f"{self.user.username} - {self.status} - {self.post.pk}"
+        return f"{self.user.username} - {self.status} - {self.article.pk}"
 
 # Comments Like Model # 
 class CommentLike(models.Model):
@@ -99,4 +103,4 @@ class CommentLike(models.Model):
     #   db_table = "CommentLike"
 
     def __str__(self):
-        return f"{self.user.username} - {self.status} - {self.post.pk}"
+        return f"{self.user.username} - {self.status} - {self.article.pk}"
