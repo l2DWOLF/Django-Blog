@@ -1,13 +1,15 @@
 from rest_framework.serializers import ModelSerializer
+from taggit.serializers import (TagListSerializerField, TaggitSerializer)
 from .models import UserProfile, Article, Comment, ArticleLike, CommentLike
-
 
 class UserProfileSerializer(ModelSerializer):
     class Meta:
         model = UserProfile
         fields = '__all__'
 
-class ArticleSerializer(ModelSerializer):
+
+class ArticleSerializer(TaggitSerializer, ModelSerializer):
+    tags = TagListSerializerField()
     class Meta:
         model = Article
         fields = '__all__'

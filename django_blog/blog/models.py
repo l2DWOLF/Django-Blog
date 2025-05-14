@@ -25,8 +25,6 @@ STATUS_LIST = [
     ('publish', 'Publish'),
     ('archvied', 'Archived')
 ]
-
-
 class Article(models.Model):
     author = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     title = models.CharField(max_length=100, blank=False, null=False,
@@ -67,7 +65,7 @@ class Comment(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"by - {self.author.username} article - {self.article.pk}"
+        return f"by: {self.author.username}, article - {self.article.pk}: {self.content}"
 
 # Likes Models #
 LIKE_STATUS = [
@@ -75,8 +73,6 @@ LIKE_STATUS = [
     ('dislike', 'Dislike')
 ]
 # Articles Like Model #
-
-
 class ArticleLike(models.Model):
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     article = models.ForeignKey(Article, on_delete=models.CASCADE)
@@ -89,7 +85,6 @@ class ArticleLike(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.status} - {self.article.pk}"
-
 # Comments Like Model # 
 class CommentLike(models.Model):
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
@@ -100,7 +95,7 @@ class CommentLike(models.Model):
     # Prevent Multiple Likes
     class Meta:
         unique_together = [('user', 'comment')]
-    #   db_table = "CommentLike"
+    #   db_table = "CommentLike" - Rename db model name
 
     def __str__(self):
-        return f"{self.user.username} - {self.status} - {self.article.pk}"
+        return f"{self.user.username} - {self.status}d - {self.article.pk}"

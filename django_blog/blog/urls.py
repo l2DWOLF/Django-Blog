@@ -5,10 +5,10 @@ from .views import *
 router = DefaultRouter()
 router.register('userprofiles', UserProfilesViewSet, basename='userprofiles')
 router.register('article', ArticlesViewSet, basename='article')
-router.register('comments',CommentsViewSet, basename='comment')
+router.register('comments', CommentsViewSet, basename='comment')
 router.register('article-likes', ArticlesLikeViewSet, basename='article-likes')
 router.register('comment-likes', CommentsLikeViewSet, basename='comment-likes')
 
 urlpatterns = [
-    path('router/', include(router.urls)),
+    path('', include(router.urls)),
 ]
