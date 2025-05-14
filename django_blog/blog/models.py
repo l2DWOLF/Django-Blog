@@ -3,8 +3,6 @@ from django.contrib.auth.models import User
 from taggit.managers import TaggableManager
 from django.core.validators import MinLengthValidator, MaxLengthValidator, RegexValidator
 
-# Create your models here.
-
 # Users Profile Model #
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, unique = True)

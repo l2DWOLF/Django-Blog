@@ -3,11 +3,12 @@ from rest_framework.routers import DefaultRouter
 from .views import * 
 
 router = DefaultRouter()
+router.register('userprofiles', UserProfilesViewSet, basename='userprofiles')
 router.register('posts', PostsViewSet, basename='post')
+router.register('comments',CommentsViewSet, basename='comment')
+router.register('post-likes', PostsLikeViewSet, basename='post-likes')
+router.register('comment-likes', CommentsLikeViewSet, basename='comment-likes')
 
 urlpatterns = [
-    path('', APIMap.as_view(), name="map"),
     path('router/', include(router.urls)),
-    path('posts/', PostsView.as_view(), name='posts'),
-    path('posts/<int:pk>', PostsManageView.as_view(), name='posts-manage'),
 ]

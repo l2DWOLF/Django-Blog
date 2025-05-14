@@ -1,24 +1,47 @@
 from django.shortcuts import render
 from rest_framework.reverse import reverse
-from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
-from rest_framework.viewsets import ViewSet
+from rest_framework.viewsets import ModelViewSet
 from .models import *
 from .serializers import *
 
-# API Map View # 
+# UserProfiles Model View Set # 
+class UserProfilesViewSet(ModelViewSet):
+    queryset = UserProfile.objects.all()
+    serializer_class = UserProfileSerializer
+
+# Posts Model View Set # 
+class PostsViewSet(ModelViewSet):
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
+
+# Comments Model View Set #
+class CommentsViewSet(ModelViewSet):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+
+# Posts Like Model View Set #
+class PostsLikeViewSet(ModelViewSet):
+    queryset = PostLike.objects.all()
+    serializer_class = PostLikeSerializer
+# Comments Like Model View Set # 
+class CommentsLikeViewSet(ModelViewSet):
+    queryset = CommentLike.objects.all()
+    serializer_class = CommentLikeSerializer
+
+
+""" # API Map View # 
 class APIMap(APIView):
-    """Blog API Map"""
+    ###Blog API Map###
     def get(self, request):
         return Response({
             "posts": reverse('posts', request=request),
             "posts-manage": reverse('posts-manage', kwargs = {"pk": 1}, request=request)
-        })
+        }) """
 
-# View Set # 
+""" # Posts View Set # 
 class PostsViewSet(ViewSet):
-    """Example View Set"""
+    ###Example View Set###
 
     def list(self, request):
         posts = Post.objects.all()
@@ -33,12 +56,11 @@ class PostsViewSet(ViewSet):
         return Response('partial update')
     def destroy(self, request, pk=None):
         return Response('destroy/delete')
-
-# Posts View #
+# Posts (List) View #
 class PostsView(ListCreateAPIView):
     serializer_class = PostSerializer
     queryset = Post.objects.all()
-# Posts Manage View # 
+# Posts Manage (RetrieveUpdateDestroy) View # 
 class PostsManageView(RetrieveUpdateDestroyAPIView):
     serializer_class = PostSerializer
-    queryset = Post.objects.all()
+    queryset = Post.objects.all() """

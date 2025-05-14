@@ -3,7 +3,7 @@ from .models import UserProfile, Post, Comment, PostLike, CommentLike
 
 
 class UserProfileSerializer(ModelSerializer):
-    class Mesa:
+    class Meta:
         model = UserProfile
         fields = '__all__'
 
