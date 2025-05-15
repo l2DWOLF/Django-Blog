@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from .models import *
 from .serializers import *
@@ -17,6 +18,40 @@ class ArticlesViewSet(ModelViewSet):
 class CommentsViewSet(ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
+    
+    def list(self, request, *args, **kwargs):
+        res = super().list(request, *args, **kwargs)
+        root_comments = []
+        comments = res.data
+        comments_dict = {comment["id"]:comment for comment in comments}
+# [tree structure nested comments/replies sorting]: 
+# if comment reply_to isn't null, get the parent/article of reply, 
+# if parent has no replies create replies list object, 
+# append the comment as a reply to the parent.
+# n*2
+        for comment in comments:
+            parent_id = comment['reply_to']
+            if parent_id is None:
+                root_comments.append(comment)
+            else:
+                parent = comments_dict.get(parent_id)
+               # if parent and parent["article"] == comment["article"]:
+                if "replies" not in parent:
+                    parent["replies"] = []
+                parent["replies"].append(comment)
+        res.data = root_comments
+        return res
+
+    def create(self, request, *args, **kwargs):
+        data = request.data
+        reply_to = data.get('reply_to')
+        article_id = data.get('article')
+# validate replies article match
+        if reply_to:
+            replied = Comment.objects.get(id=reply_to)
+            if int(replied.article.id) != int(article_id):
+                return Response({"error": "Comment Reply must be under the same Article"}, status=400)
+        return super().create(request, *args, **kwargs)
 
 # Articles Like Model View Set #
 class ArticlesLikeViewSet(ModelViewSet):

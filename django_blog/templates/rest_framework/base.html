@@ -12,7 +12,7 @@
         <meta name="robots" content="NONE,NOARCHIVE" />
       {% endblock %}
 
-      <title>{% block title %}{% if name %}{{ name }} – {% endif %}Django REST framework{% endblock %}</title>
+      <title>{% block title %}{% if name %}{{ name }} – {% endif %}IE Django-Blog{% endblock %}</title>
 
       {% block style %}
         {% block bootstrap_theme %}
@@ -39,7 +39,10 @@
             <span>
               {% block branding %}
                 <a class='navbar-brand' rel="nofollow" href='https://www.django-rest-framework.org/'>
-                    Django-Blog Browsable API.
+                    IE Django-Blog's Browsable API &nbsp; | 
+                </a>
+                <a class='navbar-brand' rel="nofollow" href='https://l2dwolf.github.io/IE-Portfolio/'>
+                    IE Django-Blog's React Front-End 
                 </a>
               {% endblock %}
             </span>
@@ -175,13 +178,12 @@
               </div>
 
               <div class="response-info" aria-label="{% trans "response info" %}">
-                <pre class="prettyprint"><span class="meta nocode"><b>HTTP {{ response.status_code }} {{ response.status_text }}</b>{% for key, val in response_headers|items %}
+                <pre class="prettyprint"><span class="meta nocode"><b>HTTP {{ response.status_code }} {{ response.status_text }}</b>{% for key, val in response_headers|items %} 
 <b>{{ key }}:</b> <span class="lit">{{ val|urlize }}</span>{% endfor %}
 
 </span>{{ content|urlize }}</pre>
               </div>
             </div>
-
             {% if display_edit_forms %}
               {% if post_form or raw_data_post_form %}
                 <div {% if post_form %}class="tabbable"{% endif %}>
