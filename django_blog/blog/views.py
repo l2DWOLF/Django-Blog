@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from .models import *
 from .serializers import *
+from core.utils import parse_int
 
 # UserProfiles Model View Set # 
 class UserProfilesViewSet(ModelViewSet):
@@ -45,12 +46,12 @@ class CommentsViewSet(ModelViewSet):
     def create(self, request, *args, **kwargs):
         data = request.data
         reply_to = data.get('reply_to')
-        article_id = data.get('article')
+        article_id = parse_int(data.get('article'))
 # validate replies article match
         if reply_to:
             replied = Comment.objects.get(id=reply_to)
-            if int(replied.article.id) != int(article_id):
-                return Response({"error": "Comment Reply must be under the same Article"}, status=400)
+            if replied and replied.article.id != article_id:
+                return Response({"error": "Comment reply Must be under the Same Article"}, status=400)
         return super().create(request, *args, **kwargs)
 
 # Articles Like Model View Set #

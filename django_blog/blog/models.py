@@ -65,7 +65,7 @@ class Comment(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"by: {self.author.username}, article - {self.article.pk}: {self.content}"
+        return f"by: {self.author.username}, article - {self.article.pk}: {self.content} Reply TO: {self.reply_to}"
 
 # Likes Models #
 LIKE_STATUS = [
