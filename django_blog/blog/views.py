@@ -1,9 +1,13 @@
 from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import DjangoModelPermissions
+from core.permissions import IsAdminOrModerator, IsOwnerOrReadOnly
+from core.utils import parse_int
 from .models import *
 from .serializers import *
-from core.utils import parse_int
+
 
 # UserProfiles Model View Set # 
 class UserProfilesViewSet(ModelViewSet):
@@ -14,11 +18,13 @@ class UserProfilesViewSet(ModelViewSet):
 class ArticlesViewSet(ModelViewSet):
     queryset = Article.objects.all()
     serializer_class = ArticleSerializer
+    permission_classes = [DjangoModelPermissions]
 
 # Comments Model View Set #
 class CommentsViewSet(ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
+    permission_classes = [IsOwnerOrReadOnly]
     
     def list(self, request, *args, **kwargs):
         res = super().list(request, *args, **kwargs)

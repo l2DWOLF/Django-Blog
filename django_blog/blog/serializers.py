@@ -37,7 +37,6 @@ class UserProfileSerializer(ModelSerializer):
 
 class ArticleSerializer(TaggitSerializer, ModelSerializer):
     tags = TagFieldSerializer(style={'base_template': 'textarea.html'})
-
     class Meta:
         model = Article
         fields = '__all__'
