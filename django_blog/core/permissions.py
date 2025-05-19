@@ -26,7 +26,7 @@ class IsOwnerOrReadOnly(BasePermission):
             return obj.author.user == request.user
         return False
     
-class isOwnerOrModelPermissions(DjangoModelPermissions):
+class IsOwnerOrModelPermissions(DjangoModelPermissions):
     def has_object_permission(self, request, view, obj):
         if (
             request.method in permissions.SAFE_METHODS
