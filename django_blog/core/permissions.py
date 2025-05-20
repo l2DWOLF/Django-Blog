@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from rest_framework import permissions 
 from rest_framework.permissions import BasePermission, DjangoModelPermissions
 
@@ -33,6 +34,8 @@ class IsOwnerOrModelPermissions(DjangoModelPermissions):
             and super().has_permission(request, view)
         ):
             return True
+        if isinstance(obj, User):
+            return obj == request.user or request.user.is_superuser
         
         return (
             obj.author.user == request.user

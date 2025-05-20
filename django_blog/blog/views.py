@@ -1,12 +1,16 @@
 from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
-from rest_framework.permissions import IsAuthenticated
-from core.permissions import IsAdminOrModerator, IsOwnerOrReadOnly, IsOwnerOrModelPermissions
+from core.permissions import IsOwnerOrModelPermissions
 from core.utils import parse_int
 from .models import *
 from .serializers import *
 
+# Users Model View Set #
+class UsersViewSet(ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsOwnerOrModelPermissions]
 
 # UserProfiles Model View Set # 
 class UserProfilesViewSet(ModelViewSet):

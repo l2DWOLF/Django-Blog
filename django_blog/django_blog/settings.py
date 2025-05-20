@@ -26,10 +26,13 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 #libs
     'rest_framework',
+    'rest_framework.authtoken',
     'taggit',
 #apps
     'blog.apps.BlogConfig',
 ]
+
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -83,14 +86,20 @@ DATABASES = {
 }
 
 REST_FRAMEWORK = {
-    'DEFAULT_RENDERER_CLASSES': (
+    'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',
-    ),
+    ],
 
-    'DEFAULT_PERMISSION_CLASSES': (
+    'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
-    )
+    ],
+
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.TokenAuthentication'
+    ],
 }
 
 TAGGIT_CASE_INSENSITIVE = True
