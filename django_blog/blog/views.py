@@ -1,16 +1,66 @@
 from django.shortcuts import render
+from django.contrib.auth.models import User
+from django.contrib.auth import login, logout
 from rest_framework.response import Response
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.reverse import reverse
+from rest_framework.decorators import action
+from rest_framework.viewsets import ModelViewSet, ViewSet
+from rest_framework.authtoken.models import Token
+from rest_framework.authtoken.serializers import AuthTokenSerializer
+from rest_framework.permissions import IsAdminUser, IsAuthenticated, AllowAny
 from core.permissions import IsOwnerOrModelPermissions
 from core.utils import parse_int
 from .models import *
 from .serializers import *
 
+# Auth View Set # 
+class AuthViewSet(ViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [AllowAny]
+    
+    def list(self, request):
+        return Response({
+            "login": reverse('auth-login', request=request),
+            "register": reverse('auth-register', request=request),
+            "logout": reverse('auth-logout', request=request)
+        })
+    
+    @action(detail = False, methods=['post', 'get'])
+    def login(self, request):
+        serializer = AuthTokenSerializer(data=request.data, context = {'request': request})
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        token, _ = Token.objects.get_or_create(user=user)
+        login(request, user)
+        return Response({"token": token.key})
+        
+
+    @action(detail = False, methods=['post', 'get'])
+    def register(self, request):
+        serializer = UserSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+
+        token, _ = Token.objects.get_or_create(user=user)
+        return Response({'token': token.key})
+
+    @action(detail = False, methods=['post', 'get'], 
+            permission_classes = [IsAuthenticated])    
+    def logout(self, request):
+        try:
+            logout(request)
+            request.user.auth_token.delete()
+        except Exception as e: 
+            print(e)
+        return Response({"message": f"you're now logged out {request.user.username}, see you soon!"})
+
+
 # Users Model View Set #
 class UsersViewSet(ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [IsOwnerOrModelPermissions]
+    permission_classes = [IsAdminUser]
 
 # UserProfiles Model View Set # 
 class UserProfilesViewSet(ModelViewSet):
@@ -35,18 +85,13 @@ class CommentsViewSet(ModelViewSet):
         root_comments = []
         comments = res.data
         comments_dict = {comment["id"]:comment for comment in comments}
-# [tree structure nested comments/replies sorting]: 
-# if comment reply_to isn't null, get the parent/article of reply, 
-# if parent has no replies create replies list object, 
-# append the comment as a reply to the parent.
-# n*2
+        # n*2
         for comment in comments:
             parent_id = comment['reply_to']
             if parent_id is None:
                 root_comments.append(comment)
             else:
                 parent = comments_dict.get(parent_id)
-               # if parent and parent["article"] == comment["article"]:
                 if "replies" not in parent:
                     parent["replies"] = []
                 parent["replies"].append(comment)

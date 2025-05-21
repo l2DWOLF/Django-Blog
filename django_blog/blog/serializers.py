@@ -1,5 +1,5 @@
 import re
-from rest_framework.serializers import ModelSerializer, HiddenField, SerializerMethodField
+from rest_framework.serializers import ModelSerializer, HiddenField, SerializerMethodField, ValidationError
 from taggit.serializers import (TagListSerializerField, TaggitSerializer)
 from django.contrib.auth.models import User
 from blog.models import UserProfile, Article, Comment, ArticleLike, CommentLike
@@ -41,18 +41,28 @@ class CurrentUserDefault():
 class UserSerializer(ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'password', 'email', 'first_name',
-                    'last_name']
+        fields = ['id', 'username', 'password', 'email']
         extra_kwargs = {
-            'password': {'write_only': False, 'required': True},
             'id': {'read_only': True},
             'username': {'required': True, 'min_length': 3},
+            'password': {'write_only': False, 'required': True},
             'email': {'required': True, 'min_length': 8}
         }
-    
+
+    def validate_password(self, value):
+        if len(value)  < 8 :
+            raise ValidationError('Password Must contain 8 or more characters')
+        return value
     def create(self, validated_data):
         user = User.objects.create_user(**validated_data)
         return user
+    def update(self, instance:User, validated_data):
+        password = validated_data.pop('password', None)
+        for key, value in validated_data.items():
+            setattr(instance, key, value)
+        instance.set_password(password)
+        instance.save()
+        return instance
 
 class UserProfileSerializer(ModelSerializer):
     class Meta:

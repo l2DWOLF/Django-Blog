@@ -79,7 +79,6 @@ class ArticleLike(models.Model):
     status = models.CharField(max_length=7, 
                 choices=LIKE_STATUS, default='like')
     created_at = models.DateTimeField(auto_now_add=True)
-    # Prevent Multiple Likes
     class Meta:
         unique_together = ['user', 'article']
 
@@ -92,10 +91,8 @@ class CommentLike(models.Model):
     status = models.CharField(max_length=7,
                 choices=LIKE_STATUS, default='like')
     created_at = models.DateTimeField(auto_now_add=True)
-    # Prevent Multiple Likes
     class Meta:
         unique_together = [('user', 'comment')]
-    #   db_table = "CommentLike" - Rename db model name
 
     def __str__(self):
-        return f"{self.user.username} - {self.status}d - {self.article.pk}"
+        return f"{self.user.username} - {self.status}d - {self.comment.pk}"

@@ -4,7 +4,8 @@ from rest_framework.authtoken import views as auth_views
 from blog.views import * 
 
 router = DefaultRouter()
-router.register('auth', UsersViewSet, basename='auth')
+router.register('admin', UsersViewSet, basename='admin')
+router.register('auth', AuthViewSet, basename='auth')
 router.register('userprofiles', UserProfilesViewSet, basename='userprofile')
 router.register('articles', ArticlesViewSet, basename='article')
 router.register('comments', CommentsViewSet, basename='comment')
