@@ -3,6 +3,7 @@ from rest_framework.serializers import ModelSerializer, HiddenField, SerializerM
 from taggit.serializers import (TagListSerializerField, TaggitSerializer)
 from django.contrib.auth.models import User
 from blog.models import UserProfile, Article, Comment, ArticleLike, CommentLike
+from core.utils import to_lower_strip
 
 
 # Custom Field Serializers #
@@ -41,18 +42,31 @@ class CurrentUserDefault():
 class UserSerializer(ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'password', 'email']
+        fields = ['id', 'username', 'password', 'email', 'first_name', 'last_name']
         extra_kwargs = {
             'id': {'read_only': True},
             'username': {'required': True, 'min_length': 3},
             'password': {'write_only': False, 'required': True},
-            'email': {'required': True, 'min_length': 8}
+            'email': {'required': True, 'min_length': 8},
+            'first_name': {'required': False},
+            'last_name': {'required': False}
         }
 
+    def validate(self, attrs):
+        for key in attrs:
+            attrs[key] = to_lower_strip(attrs[key])
+        password = attrs['password']
+        print(attrs)
+
+        if any(attr in password for attr in [attrs['username'], attrs['email'], attrs['first_name'], attrs['last_name']] if attr):
+            raise ValidationError("Password can't contain your username or email or first or last name.")
+        return super().validate(attrs)
+    
     def validate_password(self, value):
         if len(value)  < 8 :
             raise ValidationError('Password Must contain 8 or more characters')
         return value
+    
     def create(self, validated_data):
         user = User.objects.create_user(**validated_data)
         return user
