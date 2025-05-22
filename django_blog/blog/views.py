@@ -9,6 +9,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.serializers import AuthTokenSerializer
 from rest_framework.permissions import IsAdminUser, IsAuthenticated, AllowAny
 from core.permissions import IsOwnerOrModelPermissions
+from core.authentication import generate_jwt_tokens
 from core.utils import parse_int
 from .models import *
 from .serializers import *
@@ -32,18 +33,19 @@ class AuthViewSet(ViewSet):
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
         token, _ = Token.objects.get_or_create(user=user)
+        jwt = generate_jwt_tokens(user)
         login(request, user)
-        return Response({"token": token.key})
-        
+        return Response({"token": token.key, 'jwt': jwt})
 
     @action(detail = False, methods=['post', 'get'])
     def register(self, request):
         serializer = UserSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
-
         token, _ = Token.objects.get_or_create(user=user)
-        return Response({'token': token.key})
+        jwt = generate_jwt_tokens(user)
+        login(request, user)
+        return Response({"token": token.key, 'jwt': jwt})
 
     @action(detail = False, methods=['post', 'get'], 
             permission_classes = [IsAuthenticated])    
