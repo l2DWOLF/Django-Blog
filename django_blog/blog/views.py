@@ -10,7 +10,7 @@ from rest_framework.authtoken.serializers import AuthTokenSerializer
 from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAdminUser, IsAuthenticated, AllowAny
-from core.permissions import IsOwnerOrModelPermissions
+from core.permissions import IsOwnerOrModelPermissions, IsOwnerOrReadOnly
 from core.authentication import generate_jwt_tokens
 from core.utils import parse_int
 from blog.throttling import *
@@ -97,7 +97,7 @@ class ArticlesViewSet(ModelViewSet):
 class CommentsViewSet(ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-    permission_classes = [IsOwnerOrModelPermissions]
+    permission_classes = [IsOwnerOrReadOnly]
 
     def list(self, request, *args, **kwargs):
         res = super().list(request, *args, **kwargs)
