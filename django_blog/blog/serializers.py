@@ -113,6 +113,7 @@ class ArticleSerializer(TaggitSerializer, ModelSerializer):
 class CommentSerializer(ModelSerializer):
     author = HiddenField(default=CurrentUserDefault())
     author_name = SerializerMethodField()
+    
     class Meta:
         model = Comment
         fields = '__all__'

@@ -1,4 +1,3 @@
-from rest_framework_simplejwt.tokens import RefreshToken
 from blog.serializers import TokenPairSerializer
 
 def generate_jwt_tokens(user):

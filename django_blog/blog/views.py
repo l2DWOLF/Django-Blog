@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.auth.models import User
 from django.contrib.auth import login, logout
 from rest_framework.response import Response
@@ -8,6 +8,7 @@ from rest_framework.viewsets import ModelViewSet, ViewSet
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.serializers import AuthTokenSerializer
 from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
+from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAdminUser, IsAuthenticated, AllowAny
 from core.permissions import IsOwnerOrModelPermissions
 from core.authentication import generate_jwt_tokens
@@ -15,6 +16,7 @@ from core.utils import parse_int
 from blog.throttling import *
 from .models import *
 from .serializers import *
+import json
 
 # Auth View Set # 
 class AuthViewSet(ViewSet):
@@ -79,6 +81,9 @@ class ArticlesViewSet(ModelViewSet):
     queryset = Article.objects.all()
     serializer_class = ArticleSerializer
     permission_classes = [IsOwnerOrModelPermissions]
+    filter_backends = [SearchFilter, OrderingFilter, DjangoFilterBackend]
+    filterset_fields = ['author', 'title', 'content', 'published_at', 'updated_at']
+    search_fields = ['title', 'content']
     mapping = {
         'create': [CreateArticleUserThrottle, CreateArticleAnonThrottle],
         'list': [ListArticlesUserThrottle, ListArticlesAnonThrottle]
@@ -93,23 +98,34 @@ class CommentsViewSet(ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     permission_classes = [IsOwnerOrModelPermissions]
-    
+
     def list(self, request, *args, **kwargs):
         res = super().list(request, *args, **kwargs)
+        comments = []
         root_comments = []
-        comments = res.data
-        comments_dict = {comment["id"]:comment for comment in comments}
+        raw_comments = res.data.get('results', [])
+
+        for c in raw_comments:
+            if isinstance(c, str):
+                try:
+                    comments.append(json.loads(c))
+                except json.JSONDecodeError:
+                    continue
+            else:
+                comments.append(c)
+
+        comments_dict = {comment["id"] :comment for comment in comments}
         # n*2
         for comment in comments:
-            parent_id = comment['reply_to']
+            parent_id = comment.get('reply_to')
             if parent_id is None:
                 root_comments.append(comment)
             else:
                 parent = comments_dict.get(parent_id)
-                if "replies" not in parent:
-                    parent["replies"] = []
-                parent["replies"].append(comment)
-        res.data = root_comments
+                if parent is not None:
+                    parent.setdefault("replies", []).append(comment)
+
+        res.data['results'] = root_comments
         return res
 
     def create(self, request, *args, **kwargs):
