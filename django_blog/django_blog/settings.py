@@ -89,22 +89,49 @@ DATABASES = {
 }
 
 REST_FRAMEWORK = {
+
+    'EXCEPTION_HANDLER': 'blog.exceptions.blog_except_handler',
+
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',
     ],
 
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.AllowAny',
     ],
 
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
-
         'rest_framework.authentication.TokenAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
+
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '15/min',
+        'user': '1000/day',
+
+        'list_articles_user': '25/minute',
+        'list_articles_anon': '15/minute',
+
+        'retrieve_article_user': '25/minute',
+        'retrieve_article_anon': '15/minute',
+
+        'create_article_user': '5/minute',
+        'create_article_anon': '1/minute',
+
+        'update_article_user': '15/minute',
+        'update_article_anon': '1/minute',
+
+        'delete_article_user': '10/minute',
+        'delete_article_anon': '1/minute',
+        
+},
 }
 
 SIMPLE_JWT = {
@@ -112,7 +139,7 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timedelta(hours=12),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
-    "UPDATE_LAST_LOGIN": False
+    "TOKEN_OBTAIN_SERIALIZER": "blog.serializers.TokenPairSerializer"
 }
 
 TAGGIT_CASE_INSENSITIVE = True

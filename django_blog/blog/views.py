@@ -7,10 +7,12 @@ from rest_framework.decorators import action
 from rest_framework.viewsets import ModelViewSet, ViewSet
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.serializers import AuthTokenSerializer
+from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 from rest_framework.permissions import IsAdminUser, IsAuthenticated, AllowAny
 from core.permissions import IsOwnerOrModelPermissions
 from core.authentication import generate_jwt_tokens
 from core.utils import parse_int
+from blog.throttling import *
 from .models import *
 from .serializers import *
 
@@ -19,6 +21,8 @@ class AuthViewSet(ViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
+    throttling_classes = [AnonRateThrottle, UserRateThrottle]
+    throttle_rates = {'anon': '5/minute', 'user': '10/minute'}
     
     def list(self, request):
         return Response({
@@ -75,6 +79,14 @@ class ArticlesViewSet(ModelViewSet):
     queryset = Article.objects.all()
     serializer_class = ArticleSerializer
     permission_classes = [IsOwnerOrModelPermissions]
+    mapping = {
+        'create': [CreateArticleUserThrottle, CreateArticleAnonThrottle],
+        'list': [ListArticlesUserThrottle, ListArticlesAnonThrottle]
+    }
+
+    def get_throttles(self):
+        throttles = self.mapping.get(self.action, [])
+        return [throttle() for throttle in throttles]
 
 # Comments Model View Set #
 class CommentsViewSet(ModelViewSet):
@@ -119,39 +131,3 @@ class ArticlesLikeViewSet(ModelViewSet):
 class CommentsLikeViewSet(ModelViewSet):
     queryset = CommentLike.objects.all()
     serializer_class = CommentLikeSerializer
-
-
-""" # API Map View # 
-class APIMap(APIView):
-    ###Blog API Map###
-    def get(self, request):
-        return Response({
-            "posts": reverse('posts', request=request),
-            "posts-manage": reverse('posts-manage', kwargs = {"pk": 1}, request=request)
-        }) """
-
-""" # Posts View Set # 
-class PostsViewSet(ViewSet):
-    ###Example View Set###
-
-    def list(self, request):
-        posts = Post.objects.all()
-        return Response(f'list: {posts}')
-    def create(self, request):
-        return Response('create')
-    def retrieve(self, request, pk=None):
-        return Response('retrieve')
-    def update(self, request, pk=None):
-        return Response('update')
-    def partial_update(self, request, pk=None):
-        return Response('partial update')
-    def destroy(self, request, pk=None):
-        return Response('destroy/delete')
-# Posts (List) View #
-class PostsView(ListCreateAPIView):
-    serializer_class = PostSerializer
-    queryset = Post.objects.all()
-# Posts Manage (RetrieveUpdateDestroy) View # 
-class PostsManageView(RetrieveUpdateDestroyAPIView):
-    serializer_class = PostSerializer
-    queryset = Post.objects.all() """

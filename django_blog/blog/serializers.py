@@ -1,5 +1,6 @@
 import re
 from rest_framework.serializers import ModelSerializer, HiddenField, SerializerMethodField, ValidationError
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from taggit.serializers import (TagListSerializerField, TaggitSerializer)
 from django.contrib.auth.models import User
 from blog.models import UserProfile, Article, Comment, ArticleLike, CommentLike
@@ -37,6 +38,17 @@ class CurrentUserDefault():
     def __call__(self, serializer_field):
         request = serializer_field.context['request']
         return request.user.userprofile
+
+# Token Serializers # 
+class TokenPairSerializer(TokenObtainPairSerializer):
+    @classmethod 
+    def get_token(cls, user):
+        token = super().get_token(user)
+
+        token['username'] = user.username
+        token['is_admin'] = user.is_superuser
+
+        return token
 
 # Model Serializers # 
 class UserSerializer(ModelSerializer):
@@ -85,7 +97,7 @@ class UserProfileSerializer(ModelSerializer):
 
 class ArticleSerializer(TaggitSerializer, ModelSerializer):
     tags = TagFieldSerializer(style={'base_template': 'textarea.html'})
-    author = HiddenField(default=CurrentUserDefault)
+    author = HiddenField(default=CurrentUserDefault())
     author_id = SerializerMethodField()
     author_name = SerializerMethodField()
 
@@ -99,7 +111,7 @@ class ArticleSerializer(TaggitSerializer, ModelSerializer):
         return obj.author.user.username
 
 class CommentSerializer(ModelSerializer):
-    author = HiddenField(default=CurrentUserDefault)
+    author = HiddenField(default=CurrentUserDefault())
     author_name = SerializerMethodField()
     class Meta:
         model = Comment

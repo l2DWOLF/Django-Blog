@@ -1,8 +1,8 @@
 from rest_framework_simplejwt.tokens import RefreshToken
-
+from blog.serializers import TokenPairSerializer
 
 def generate_jwt_tokens(user):
-    refresh = RefreshToken.for_user(user)
+    refresh = TokenPairSerializer.get_token(user)
 
     return {
         'refresh': str(refresh),
