@@ -24,7 +24,7 @@ class AuthViewSet(ViewSet):
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
     throttling_classes = [AnonRateThrottle, UserRateThrottle]
-    throttle_rates = {'anon': '5/minute', 'user': '10/minute'}
+    throttle_rates = {'anon': '5/minute', 'user': '15/minute'}
     
     def list(self, request):
         return Response({
