@@ -4,7 +4,7 @@ from taggit.models import Tag
 from blog.models import *
 from blog.management.commands.seeding_tools import *
 from blog.management.commands.group_models_permissions import mods_group_permissions, users_group_permissions
-
+from random import choice
 
 class Command(BaseCommand):
     help = 'Seed the database with initial data.'
@@ -35,12 +35,65 @@ class Command(BaseCommand):
         for tag in tags_list:
             Tag.objects.get_or_create(name=tag)
 # create articles
+        for i in range(4):
+            author_id = i + 1
+            if author_id > 2:
+                author_id = 2
 
+            authorProfile, _ = UserProfile.objects.get_or_create(id=author_id)
+            article, _ = Article.objects.get_or_create(
+                author = authorProfile, 
+                title = f'title of article {i+1}', 
+                content = f'content of article {i+1}',
+                status = status_list[i-1]
+            )
+            article.tags.add(*article_tags[i-1])
+            article.save()
 # create comments & nested comments
+        for j in range(3):
+            userProfile = regular_user if j % 2 == 0 else moderator_user
 
-# create article likes, dislikes. 
+            comment, _ = Comment.objects.get_or_create(
+                author=userProfile.userprofile,
+                article=article,
+                content=f"Comment {j + 1} on article {i + 1}",
+                status='publish'
+            )
+            comment.save()
 
-# create comment likes, dislikes. 
+            if j > 0:
+                parent_comment, _ = Comment.objects.get_or_create(
+                    article=article, content=f"Comment {j} on article {i + 1}")
+                nested_comment, _ = Comment.objects.get_or_create(
+                    author=regular_user.userprofile,
+                    article=article,
+                    content=f"Reply to Comment {j} on article {i + 1}",
+                    reply_to=parent_comment,
+                    status='publish'
+                )
+                nested_comment.save()
+# create article & comment likes, dislikes.
+        users = UserProfile.objects.all()
+        for user in users:
+            articles = Article.objects.all()
+            for article in articles:
+                like_status = choice(['like', 'dislike'])
+                if not ArticleLike.objects.filter(user=user, article=article).exists():
+                    ArticleLike.objects.create(
+                        user=user,
+                        article=article,
+                        status=like_status
+                    )
+
+            comments = Comment.objects.all()
+            for comment in comments:
+                like_status = choice(['like', 'dislike'])  # 
+                if not CommentLike.objects.filter(user=user, comment=comment).exists():
+                    CommentLike.objects.create(
+                        user=user,
+                        comment=comment,
+                        status=like_status
+                    )
 
 
         self.stdout.write(self.style.SUCCESS('Seeding Completed Successfully...'))

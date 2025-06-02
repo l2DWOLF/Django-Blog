@@ -17,4 +17,13 @@ tags_list = [
     'SQL', 'Django', 'MongoDB', 'HTML', 'CSS', 'Computer Science'
 ]
 
+article_tags = [
+    ['Django', 'Python', 'SQL'], 
+    ['JavaScript', 'HTML', 'CSS'], 
+    ['MongoDB', 'Node', 'React'], 
+    ['Computer Science', 'C++']
+]
+
+status_list = ['draft', 'publish', 'archived', 'publish']
+
 
