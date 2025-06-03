@@ -25,5 +25,3 @@ article_tags = [
 ]
 
 status_list = ['draft', 'publish', 'archived', 'publish']
-
-

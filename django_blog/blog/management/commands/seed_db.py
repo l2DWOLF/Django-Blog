@@ -42,36 +42,38 @@ class Command(BaseCommand):
 
             authorProfile, _ = UserProfile.objects.get_or_create(id=author_id)
             article, _ = Article.objects.get_or_create(
-                author = authorProfile, 
-                title = f'title of article {i+1}', 
-                content = f'content of article {i+1}',
-                status = status_list[i-1]
+                author=authorProfile,
+                title=f'title of article {i+1}',
+                content=f'content of article {i+1}',
+                status=status_list[i-1]
             )
             article.tags.add(*article_tags[i-1])
             article.save()
-# create comments & nested comments
-        for j in range(3):
-            userProfile = regular_user if j % 2 == 0 else moderator_user
 
-            comment, _ = Comment.objects.get_or_create(
-                author=userProfile.userprofile,
-                article=article,
-                content=f"Comment {j + 1} on article {i + 1}",
-                status='publish'
-            )
-            comment.save()
+            # Create comments for the current article
+            for j in range(3):
+                userProfile = regular_user if j % 2 == 0 else moderator_user
 
-            if j > 0:
-                parent_comment, _ = Comment.objects.get_or_create(
-                    article=article, content=f"Comment {j} on article {i + 1}")
-                nested_comment, _ = Comment.objects.get_or_create(
-                    author=regular_user.userprofile,
+                comment, _ = Comment.objects.get_or_create(
+                    author=userProfile.userprofile,
                     article=article,
-                    content=f"Reply to Comment {j} on article {i + 1}",
-                    reply_to=parent_comment,
+                    content=f"Comment {j + 1} on article {i + 1}",
                     status='publish'
                 )
-                nested_comment.save()
+                comment.save()
+
+                if j > 0:
+                    parent_comment, _ = Comment.objects.get_or_create(
+                        article=article, content=f"Comment {j} on article {i + 1}")
+                    nested_comment, _ = Comment.objects.get_or_create(
+                        author=regular_user.userprofile,
+                        article=article,
+                        content=f"Reply to Comment {j} on article {i + 1}",
+                        reply_to=parent_comment,
+                        status='publish'
+                    )
+                    nested_comment.save()
+
 # create article & comment likes, dislikes.
         users = UserProfile.objects.all()
         for user in users:

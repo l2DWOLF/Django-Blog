@@ -1,6 +1,7 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.auth.models import User
 from django.contrib.auth import login, logout
+from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.decorators import action
@@ -10,7 +11,7 @@ from rest_framework.authtoken.serializers import AuthTokenSerializer
 from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAdminUser, IsAuthenticated, AllowAny
-from core.permissions import IsOwnerOrModelPermissions, IsOwnerOrReadOnly
+from core.permissions import IsOwnerOrModelPermissions, IsOwnerOrReadOnly, IsAdminOrOwner, IsAdminOrReadOnly
 from core.authentication import generate_jwt_tokens
 from core.utils import parse_int
 from blog.throttling import *
@@ -68,13 +69,18 @@ class AuthViewSet(ViewSet):
 class UsersViewSet(ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdminOrOwner]
 
 # UserProfiles Model View Set # 
 class UserProfilesViewSet(ModelViewSet):
     queryset = UserProfile.objects.all()
     serializer_class = UserProfileSerializer
-    permission_class = [IsOwnerOrModelPermissions]
+    permission_classes = [IsOwnerOrModelPermissions]
+
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return [IsAdminOrReadOnly()]
+        return super().get_permissions()
 
 # Articles Model View Set # 
 class ArticlesViewSet(ModelViewSet):
@@ -88,16 +94,30 @@ class ArticlesViewSet(ModelViewSet):
         'create': [CreateArticleUserThrottle, CreateArticleAnonThrottle],
         'list': [ListArticlesUserThrottle, ListArticlesAnonThrottle]
     }
-
+    
     def get_throttles(self):
         throttles = self.mapping.get(self.action, [])
         return [throttle() for throttle in throttles]
 
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return [IsAdminOrReadOnly()]
+        if self.action == 'get_comments_for_article':
+            return [AllowAny()]
+        return super().get_permissions()
+    
+    @action(detail=True, methods=['get'], url_path='comments')
+    def get_comments_for_article(self, request, pk=None):
+        article = self.get_object()
+        comments = Comment.objects.filter(article=article, status='publish')
+        serializer = CommentSerializer(comments, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
 # Comments Model View Set #
 class CommentsViewSet(ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-    permission_classes = [IsOwnerOrReadOnly]
+    permission_classes = [IsOwnerOrModelPermissions]
 
     def list(self, request, *args, **kwargs):
         res = super().list(request, *args, **kwargs)
@@ -132,18 +152,27 @@ class CommentsViewSet(ModelViewSet):
         data = request.data
         reply_to = data.get('reply_to')
         article_id = parse_int(data.get('article'))
-# validate replies article match
+    # validate replies article match
         if reply_to:
             replied = Comment.objects.get(id=reply_to)
             if replied and replied.article.id != article_id:
                 return Response({"error": "Comment reply Must be under the Same Article"}, status=400)
         return super().create(request, *args, **kwargs)
+    
+    def get_permissions(self):
+        if self.action == 'list':
+            return [AllowAny()]
+        elif self.action == 'create':
+            return [IsAuthenticated()]
+        return super().get_permissions()
 
 # Articles Like Model View Set #
 class ArticlesLikeViewSet(ModelViewSet):
     queryset = ArticleLike.objects.all()
     serializer_class = ArticleLikeSerializer
+    permission_classes = [IsAdminOrReadOnly]
 # Comments Like Model View Set # 
 class CommentsLikeViewSet(ModelViewSet):
     queryset = CommentLike.objects.all()
     serializer_class = CommentLikeSerializer
+    permission_classes = [IsAdminOrReadOnly]
