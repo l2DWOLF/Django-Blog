@@ -43,8 +43,8 @@ class Command(BaseCommand):
             authorProfile, _ = UserProfile.objects.get_or_create(id=author_id)
             article, _ = Article.objects.get_or_create(
                 author=authorProfile,
-                title=f'title of article {i+1}',
-                content=f'content of article {i+1}',
+                title=article_data[i]['title'],
+                content=article_data[i]['content'],
                 status=status_list[i-1]
             )
             article.tags.add(*article_tags[i-1])

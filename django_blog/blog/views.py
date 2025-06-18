@@ -19,24 +19,27 @@ from .models import *
 from .serializers import *
 import json
 
-# Auth View Set # 
+# Auth View Set #
+
+
 class AuthViewSet(ViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
     throttling_classes = [AnonRateThrottle, UserRateThrottle]
     throttle_rates = {'anon': '5/minute', 'user': '15/minute'}
-    
+
     def list(self, request):
         return Response({
             "login": reverse('auth-login', request=request),
             "register": reverse('auth-register', request=request),
             "logout": reverse('auth-logout', request=request)
         })
-    
-    @action(detail = False, methods=['post', 'get'])
+
+    @action(detail=False, methods=['post', 'get'])
     def login(self, request):
-        serializer = AuthTokenSerializer(data=request.data, context = {'request': request})
+        serializer = AuthTokenSerializer(
+            data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
         token, _ = Token.objects.get_or_create(user=user)
@@ -44,7 +47,7 @@ class AuthViewSet(ViewSet):
         login(request, user)
         return Response({"token": token.key, 'jwt': jwt})
 
-    @action(detail = False, methods=['post', 'get'])
+    @action(detail=False, methods=['post', 'get'])
     def register(self, request):
         serializer = UserSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -54,13 +57,13 @@ class AuthViewSet(ViewSet):
         login(request, user)
         return Response({"token": token.key, 'jwt': jwt})
 
-    @action(detail = False, methods=['post', 'get'], 
-            permission_classes = [IsAuthenticated])    
+    @action(detail=False, methods=['post', 'get'],
+            permission_classes=[IsAuthenticated])
     def logout(self, request):
         try:
             logout(request)
             request.user.auth_token.delete()
-        except Exception as e: 
+        except Exception as e:
             print(e)
         return Response({"message": f"you're now logged out {request.user.username}, see you soon!"})
 
@@ -71,7 +74,9 @@ class UsersViewSet(ModelViewSet):
     serializer_class = UserSerializer
     permission_classes = [IsAdminOrOwner]
 
-# UserProfiles Model View Set # 
+# UserProfiles Model View Set #
+
+
 class UserProfilesViewSet(ModelViewSet):
     queryset = UserProfile.objects.all()
     serializer_class = UserProfileSerializer
@@ -82,19 +87,22 @@ class UserProfilesViewSet(ModelViewSet):
             return [IsAdminOrReadOnly()]
         return super().get_permissions()
 
-# Articles Model View Set # 
+# Articles Model View Set #
+
+
 class ArticlesViewSet(ModelViewSet):
     queryset = Article.objects.all()
     serializer_class = ArticleSerializer
     permission_classes = [IsOwnerOrModelPermissions]
     filter_backends = [SearchFilter, OrderingFilter, DjangoFilterBackend]
-    filterset_fields = ['author', 'title', 'content', 'published_at', 'updated_at']
+    filterset_fields = ['author', 'title',
+                        'content', 'published_at', 'updated_at']
     search_fields = ['title', 'content']
     mapping = {
         'create': [CreateArticleUserThrottle, CreateArticleAnonThrottle],
         'list': [ListArticlesUserThrottle, ListArticlesAnonThrottle]
     }
-    
+
     def get_throttles(self):
         throttles = self.mapping.get(self.action, [])
         return [throttle() for throttle in throttles]
@@ -105,15 +113,17 @@ class ArticlesViewSet(ModelViewSet):
         if self.action == 'get_comments_for_article':
             return [AllowAny()]
         return super().get_permissions()
-    
+
     @action(detail=True, methods=['get'], url_path='comments')
     def get_comments_for_article(self, request, pk=None):
         article = self.get_object()
         comments = Comment.objects.filter(article=article, status='publish')
         serializer = CommentSerializer(comments, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
+
 # Comments Model View Set #
+
+
 class CommentsViewSet(ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
@@ -134,7 +144,7 @@ class CommentsViewSet(ModelViewSet):
             else:
                 comments.append(c)
 
-        comments_dict = {comment["id"] :comment for comment in comments}
+        comments_dict = {comment["id"]: comment for comment in comments}
         # n*2
         for comment in comments:
             parent_id = comment.get('reply_to')
@@ -158,7 +168,7 @@ class CommentsViewSet(ModelViewSet):
             if replied and replied.article.id != article_id:
                 return Response({"error": "Comment reply Must be under the Same Article"}, status=400)
         return super().create(request, *args, **kwargs)
-    
+
     def get_permissions(self):
         if self.action == 'list':
             return [AllowAny()]
@@ -167,11 +177,15 @@ class CommentsViewSet(ModelViewSet):
         return super().get_permissions()
 
 # Articles Like Model View Set #
+
+
 class ArticlesLikeViewSet(ModelViewSet):
     queryset = ArticleLike.objects.all()
     serializer_class = ArticleLikeSerializer
     permission_classes = [IsAdminOrReadOnly]
-# Comments Like Model View Set # 
+# Comments Like Model View Set #
+
+
 class CommentsLikeViewSet(ModelViewSet):
     queryset = CommentLike.objects.all()
     serializer_class = CommentLikeSerializer
