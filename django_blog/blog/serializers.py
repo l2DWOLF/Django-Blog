@@ -1,4 +1,5 @@
 import re
+from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer, HiddenField, SerializerMethodField, ValidationError
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from taggit.serializers import (TagListSerializerField, TaggitSerializer)
@@ -100,6 +101,9 @@ class ArticleSerializer(TaggitSerializer, ModelSerializer):
     author = HiddenField(default=CurrentUserDefault())
     author_id = SerializerMethodField()
     author_name = SerializerMethodField()
+    published_at = serializers.DateTimeField(format="%B %d, %Y, %I:%M %p")
+    updated_at = serializers.DateTimeField(format="%B %d, %Y, %I:%M %p")
+    created_at = serializers.DateTimeField(format="%B %d, %Y, %I:%M %p")
 
     class Meta:
         model = Article
@@ -113,6 +117,9 @@ class ArticleSerializer(TaggitSerializer, ModelSerializer):
 class CommentSerializer(ModelSerializer):
     author = HiddenField(default=CurrentUserDefault())
     author_name = SerializerMethodField()
+
+    published_at = serializers.DateTimeField(format="%B %d, %Y, %I:%M %p")
+    updated_at = serializers.DateTimeField(format="%B %d, %Y, %I:%M %p")
     
     class Meta:
         model = Comment
