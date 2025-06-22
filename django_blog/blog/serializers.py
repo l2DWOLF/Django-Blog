@@ -1,7 +1,7 @@
 import re
 from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer, HiddenField, SerializerMethodField, ValidationError
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer 
 from taggit.serializers import (TagListSerializerField, TaggitSerializer)
 from django.contrib.auth.models import User
 from blog.models import UserProfile, Article, Comment, ArticleLike, CommentLike
@@ -45,11 +45,16 @@ class TokenPairSerializer(TokenObtainPairSerializer):
     @classmethod 
     def get_token(cls, user):
         token = super().get_token(user)
-
+        token['id'] = user.id 
         token['username'] = user.username
         token['is_admin'] = user.is_superuser
-
+        token['is_mod'] = user.groups.filter(name="moderators").exists()
         return token
+    
+class CustomTokenRefreshSerializer(TokenRefreshSerializer):
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        return data
 
 # Model Serializers # 
 class UserSerializer(ModelSerializer):

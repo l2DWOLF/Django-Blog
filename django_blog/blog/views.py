@@ -12,6 +12,8 @@ from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAdminUser, IsAuthenticated, AllowAny
 from core.permissions import IsOwnerOrModelPermissions, IsOwnerOrReadOnly, IsAdminOrOwner, IsAdminOrReadOnly
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenRefreshView
 from core.authentication import generate_jwt_tokens
 from core.utils import parse_int
 from blog.throttling import *
@@ -19,9 +21,8 @@ from .models import *
 from .serializers import *
 import json
 
+
 # Auth View Set #
-
-
 class AuthViewSet(ViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -63,11 +64,17 @@ class AuthViewSet(ViewSet):
         try:
             logout(request)
             request.user.auth_token.delete()
+            refresh_token = request.data.get("refresh")
+            if refresh_token:
+                token = RefreshToken(refresh_token)
+                token.blacklist()
         except Exception as e:
             print(e)
         return Response({"message": f"you're now logged out {request.user.username}, see you soon!"})
-
-
+# Refresh Token View # 
+class CustomTokenRefreshView(TokenRefreshView):
+    serializer_class = CustomTokenRefreshSerializer
+    
 # Users Model View Set #
 class UsersViewSet(ModelViewSet):
     queryset = User.objects.all()
@@ -75,8 +82,6 @@ class UsersViewSet(ModelViewSet):
     permission_classes = [IsAdminOrOwner]
 
 # UserProfiles Model View Set #
-
-
 class UserProfilesViewSet(ModelViewSet):
     queryset = UserProfile.objects.all()
     serializer_class = UserProfileSerializer
@@ -88,8 +93,6 @@ class UserProfilesViewSet(ModelViewSet):
         return super().get_permissions()
 
 # Articles Model View Set #
-
-
 class ArticlesViewSet(ModelViewSet):
     queryset = Article.objects.all()
     serializer_class = ArticleSerializer
@@ -122,8 +125,6 @@ class ArticlesViewSet(ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 # Comments Model View Set #
-
-
 class CommentsViewSet(ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
@@ -177,15 +178,11 @@ class CommentsViewSet(ModelViewSet):
         return super().get_permissions()
 
 # Articles Like Model View Set #
-
-
 class ArticlesLikeViewSet(ModelViewSet):
     queryset = ArticleLike.objects.all()
     serializer_class = ArticleLikeSerializer
     permission_classes = [IsAdminOrReadOnly]
 # Comments Like Model View Set #
-
-
 class CommentsLikeViewSet(ModelViewSet):
     queryset = CommentLike.objects.all()
     serializer_class = CommentLikeSerializer

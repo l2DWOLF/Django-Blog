@@ -120,11 +120,11 @@ REST_FRAMEWORK = {
         'rest_framework.throttling.UserRateThrottle',
     ],
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '500/day',
-        'user': '2500/day',
+        'anon': '50000/day',
+        'user': '25000/day',
 
-        'list_articles_user': '25/minute',
-        'list_articles_anon': '15/minute',
+        'list_articles_user': '250/minute',
+        'list_articles_anon': '150/minute',
 
         'retrieve_article_user': '25/minute',
         'retrieve_article_anon': '15/minute',
@@ -142,7 +142,7 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(hours=24),
+    "ACCESS_TOKEN_LIFETIME": timedelta(seconds=5),
     "REFRESH_TOKEN_LIFETIME": timedelta(hours=12),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,

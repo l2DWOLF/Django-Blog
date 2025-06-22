@@ -19,17 +19,17 @@ class Command(BaseCommand):
         users_group.permissions.add(*users_group_permissions)
 # create admin superuser
         admin_user, created = User.objects.get_or_create(username='admin', defaults=admin_defaults)
-        admin_user.set_password('Admin123!')
+        admin_user.set_password('AdminUser1234!')
         admin_user.save()
 # create moderator
         moderator_user, created = User.objects.get_or_create(username='moderator', defaults=moderator_defaults)
-        moderator_user.set_password('Mod123!')
+        moderator_user.set_password('ModUser1234!')
         moderator_user.groups.add(mods_group)
         moderator_user.save()
 # create user
         regular_user, created = User.objects.get_or_create(
             username='blog_user', defaults=user_defaults)
-        regular_user.set_password('User123!')
+        regular_user.set_password('UserUser1234!')
         regular_user.save()
 # create tags
         for tag in tags_list:
