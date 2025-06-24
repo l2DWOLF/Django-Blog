@@ -122,6 +122,7 @@ class ArticleSerializer(TaggitSerializer, ModelSerializer):
 class CommentSerializer(ModelSerializer):
     author = HiddenField(default=CurrentUserDefault())
     author_name = SerializerMethodField()
+    replies = SerializerMethodField()
 
     published_at = serializers.DateTimeField(format="%B %d, %Y, %I:%M %p")
     updated_at = serializers.DateTimeField(format="%B %d, %Y, %I:%M %p")
@@ -132,6 +133,9 @@ class CommentSerializer(ModelSerializer):
 
     def get_author_name(self,obj):
         return obj.author.user.username
+    def get_replies(self, obj):
+        replies = Comment.objects.filter(reply_to=obj)
+        return CommentSerializer(replies, many=True).data
 
 class ArticleLikeSerializer(ModelSerializer):
     class Meta:

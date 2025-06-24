@@ -15,7 +15,7 @@ from core.permissions import IsOwnerOrModelPermissions, IsOwnerOrReadOnly, IsAdm
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
 from core.authentication import generate_jwt_tokens
-from core.utils import parse_int
+from core.utils import nest_comments, parse_int
 from blog.throttling import *
 from .models import *
 from .serializers import *
@@ -74,7 +74,7 @@ class AuthViewSet(ViewSet):
 # Refresh Token View # 
 class CustomTokenRefreshView(TokenRefreshView):
     serializer_class = CustomTokenRefreshSerializer
-    
+
 # Users Model View Set #
 class UsersViewSet(ModelViewSet):
     queryset = User.objects.all()
@@ -120,7 +120,7 @@ class ArticlesViewSet(ModelViewSet):
     @action(detail=True, methods=['get'], url_path='comments')
     def get_comments_for_article(self, request, pk=None):
         article = self.get_object()
-        comments = Comment.objects.filter(article=article, status='publish')
+        comments = Comment.objects.filter(article=article, status='publish', reply_to=None)
         serializer = CommentSerializer(comments, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -131,33 +131,7 @@ class CommentsViewSet(ModelViewSet):
     permission_classes = [IsOwnerOrModelPermissions]
 
     def list(self, request, *args, **kwargs):
-        res = super().list(request, *args, **kwargs)
-        comments = []
-        root_comments = []
-        raw_comments = res.data.get('results', [])
-
-        for c in raw_comments:
-            if isinstance(c, str):
-                try:
-                    comments.append(json.loads(c))
-                except json.JSONDecodeError:
-                    continue
-            else:
-                comments.append(c)
-
-        comments_dict = {comment["id"]: comment for comment in comments}
-        # n*2
-        for comment in comments:
-            parent_id = comment.get('reply_to')
-            if parent_id is None:
-                root_comments.append(comment)
-            else:
-                parent = comments_dict.get(parent_id)
-                if parent is not None:
-                    parent.setdefault("replies", []).append(comment)
-
-        res.data['results'] = root_comments
-        return res
+        return super().list(request, *args, **kwargs)
 
     def create(self, request, *args, **kwargs):
         data = request.data
