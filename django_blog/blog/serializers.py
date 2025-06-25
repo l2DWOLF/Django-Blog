@@ -126,7 +126,7 @@ class CommentSerializer(ModelSerializer):
 
     published_at = serializers.DateTimeField(format="%B %d, %Y, %I:%M %p")
     updated_at = serializers.DateTimeField(format="%B %d, %Y, %I:%M %p")
-    
+
     class Meta:
         model = Comment
         fields = '__all__'

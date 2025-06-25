@@ -19,7 +19,6 @@ from core.utils import nest_comments, parse_int
 from blog.throttling import *
 from .models import *
 from .serializers import *
-import json
 
 
 # Auth View Set #
@@ -63,13 +62,16 @@ class AuthViewSet(ViewSet):
     def logout(self, request):
         try:
             logout(request)
-            request.user.auth_token.delete()
+            if request.user.is_authenticated:
+                request.user.auth_token.delete()
+            
             refresh_token = request.data.get("refresh")
             if refresh_token:
                 token = RefreshToken(refresh_token)
                 token.blacklist()
         except Exception as e:
             print(e)
+
         return Response({"message": f"you're now logged out {request.user.username}, see you soon!"})
 # Refresh Token View # 
 class CustomTokenRefreshView(TokenRefreshView):

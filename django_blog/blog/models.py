@@ -60,7 +60,6 @@ class Comment(models.Model):
     ])
     status = models.CharField(max_length=10, choices=STATUS_LIST,
                             default='draft')
-    created_at = models.DateTimeField(auto_now_add=True)
     published_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
