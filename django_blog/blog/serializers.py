@@ -66,8 +66,8 @@ class UserSerializer(ModelSerializer):
             'username': {'required': True, 'min_length': 3},
             'password': {'write_only': False, 'required': True},
             'email': {'required': True, 'min_length': 8},
-            'first_name': {'required': False},
-            'last_name': {'required': False}
+            'first_name': {'required': False, 'min_length': 2},
+            'last_name': {'required': False, 'min-length': 2}
         }
 
     def validate(self, attrs):

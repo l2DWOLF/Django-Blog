@@ -1,7 +1,7 @@
 from pathlib import Path
 from decouple import config
 from datetime import timedelta
-import os 
+import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -19,7 +19,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-#libs
+    # libs
     'corsheaders',
     'rest_framework',
     'rest_framework.authtoken',
@@ -27,7 +27,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'django_filters',
     'taggit',
-#apps
+    # apps
     'blog.apps.BlogConfig',
 ]
 
@@ -63,7 +63,7 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
             os.path.join(BASE_DIR, 'templates'),
-            os.path.join(BASE_DIR, 'templatetags')    
+            os.path.join(BASE_DIR, 'templatetags')
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -95,7 +95,7 @@ REST_FRAMEWORK = {
     'EXCEPTION_HANDLER': 'blog.exceptions.blog_except_handler',
 
     'DEFAULT_PAGINATION_CLASS': "rest_framework.pagination.LimitOffsetPagination",
-    'PAGE_SIZE': 5, 
+    'PAGE_SIZE': 5,
 
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
 
@@ -137,12 +137,12 @@ REST_FRAMEWORK = {
 
         'delete_article_user': '10/minute',
         'delete_article_anon': '1/minute',
-        
-},
+
+    },
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=10),
+    "ACCESS_TOKEN_LIFETIME": timedelta(seconds=10),
     "REFRESH_TOKEN_LIFETIME": timedelta(hours=12),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
