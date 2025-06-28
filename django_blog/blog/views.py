@@ -38,8 +38,12 @@ class AuthViewSet(ViewSet):
 
     @action(detail=False, methods=['post', 'get'])
     def login(self, request):
+        login_data = { 
+            'username': request.data.get('username'),
+            'password': request.data.get('password')
+        }
         serializer = AuthTokenSerializer(
-            data=request.data, context={'request': request})
+            data=login_data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
         token, _ = Token.objects.get_or_create(user=user)

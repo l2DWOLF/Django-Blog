@@ -64,21 +64,27 @@ class UserSerializer(ModelSerializer):
         extra_kwargs = {
             'id': {'read_only': True},
             'username': {'required': True, 'min_length': 3},
-            'password': {'write_only': False, 'required': True},
+            'password': {'write_only': True, 'required': True},
             'email': {'required': True, 'min_length': 8},
             'first_name': {'required': False, 'min_length': 2},
-            'last_name': {'required': False, 'min-length': 2}
+            'last_name': {'required': False, 'min_length': 2}
         }
 
     def validate(self, attrs):
-        for key in attrs:
-            attrs[key] = to_lower_strip(attrs[key])
-        password = attrs['password']
-        print(attrs)
+        attrs['username'] = to_lower_strip(attrs['username'])
+        attrs['email'] = to_lower_strip(attrs['email'])
+        if attrs.get('first_name'):
+            attrs['first_name'] = to_lower_strip(attrs['first_name'])
+        if attrs.get('last_name'):
+            attrs['last_name'] = to_lower_strip(attrs['last_name'])
 
-        if any(attr in password for attr in [attrs['username'], attrs['email'], attrs['first_name'], attrs['last_name']] if attr):
-            raise ValidationError("Password can't contain your username or email or first or last name.")
-        return super().validate(attrs)
+        password = attrs.get('password')
+        if any(attr in password for attr in [
+            attrs.get('username'), attrs.get('email'),
+            attrs.get('first_name'), attrs.get('last_name')
+        ] if attr):
+            raise ValidationError("Password can't contain personal info.")
+        return attrs
     
     def validate_password(self, value):
         if len(value)  < 8 :
@@ -86,8 +92,12 @@ class UserSerializer(ModelSerializer):
         return value
     
     def create(self, validated_data):
-        user = User.objects.create_user(**validated_data)
+        password = validated_data.pop('password')
+        user = User(**validated_data)
+        user.set_password(password)
+        user.save()
         return user
+        
     def update(self, instance:User, validated_data):
         password = validated_data.pop('password', None)
         for key, value in validated_data.items():
