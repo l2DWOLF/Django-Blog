@@ -38,13 +38,22 @@ class AuthViewSet(ViewSet):
 
     @action(detail=False, methods=['post', 'get'])
     def login(self, request):
-        login_data = { 
+        login_data = {
             'username': request.data.get('username'),
             'password': request.data.get('password')
         }
         serializer = AuthTokenSerializer(
             data=login_data, context={'request': request})
-        serializer.is_valid(raise_exception=True)
+
+        try:
+            serializer.is_valid(raise_exception=True)
+        except ValidationError:
+            return Response(
+                {"backend_error": [
+                    "Wrong username or password, please try again."]},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         user = serializer.validated_data['user']
         token, _ = Token.objects.get_or_create(user=user)
         jwt = generate_jwt_tokens(user)
