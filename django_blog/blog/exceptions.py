@@ -1,13 +1,14 @@
 import logging
 from django.http import Http404
 from django.core.exceptions import PermissionDenied
+from django.db.models.deletion import ProtectedError
 from rest_framework import status 
 from rest_framework.views import exception_handler
 from rest_framework.response import Response
 from rest_framework.exceptions import (
     Throttled, ValidationError, AuthenticationFailed,
     NotAuthenticated, ParseError, NotFound, MethodNotAllowed,
-    UnsupportedMediaType, NotAcceptable,)
+    UnsupportedMediaType, NotAcceptable, PermissionDenied as DRFPermissionDenied)
 from core.exceptionUtils import format_isinstance
 
 
@@ -18,9 +19,10 @@ def blog_except_handler(exc, context):
     
     for exc_type, message, status_code in [
         (Http404, "Resource Not Found.", status.HTTP_404_NOT_FOUND),
-        (ValueError, "Invalid Input.", status.HTTP_400_BAD_REQUEST),
-        (AttributeError, "Attribute Error Occurred.", status.HTTP_400_BAD_REQUEST),
+        (ValueError, f"{str(exc)} - Invalid Input.", status.HTTP_400_BAD_REQUEST),
+        (AttributeError, f"{str(exc)} - Attribute Error Occurred.", status.HTTP_400_BAD_REQUEST),
         (PermissionDenied, "Permission Denied.", status.HTTP_403_FORBIDDEN),
+        (DRFPermissionDenied, str(exc), status.HTTP_403_FORBIDDEN),
         (Throttled, "Throttled Request, too many requests - Please try again soon..",
             status.HTTP_429_TOO_MANY_REQUESTS),
         (ParseError, "Malformed request.", status.HTTP_400_BAD_REQUEST),
@@ -37,7 +39,7 @@ def blog_except_handler(exc, context):
         if formatted:
             return formatted
     
-    if isinstance(exc, ValidationError) and response is not None:
+    if isinstance(exc, ValidationError) or isinstance(exc, ValueError) and response is not None:
         formatted_errors = []
         if isinstance(response.data, dict):
             for key, value in response.data.items():
@@ -53,6 +55,12 @@ def blog_except_handler(exc, context):
         logger.warning(f"ValidationError caught: {formatted_errors}")
         return Response({"backend_error": formatted_errors}, status=response.status_code)
 
+    if isinstance(exc, ProtectedError):
+        logger.warning(f"ProtectedError caught: Attempt to delete a model with active depenencies.")
+        return Response(
+            {"backend_error": ["Cannot delete this comment because it has replies. You can edit the comment/reply instead."]},
+            status=status.HTTP_400_BAD_REQUEST)
+    
 # Catch All Exceptions # 
     if response is None:
         logger.exception(f"Unhandled exception in {context.get('view')} | "

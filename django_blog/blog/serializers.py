@@ -1,35 +1,53 @@
 import re
+import json
 from rest_framework import serializers
+from rest_framework.response import Response
 from rest_framework.serializers import ModelSerializer, HiddenField, SerializerMethodField, ValidationError
+import rest_framework.views
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer 
 from taggit.serializers import (TagListSerializerField, TaggitSerializer)
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from blog.models import UserProfile, Article, Comment, ArticleLike, CommentLike
 from core.utils import to_lower_strip
+from blog.management.commands.seeding_tools import admin_defaults
+
 
 
 # Custom Field Serializers #
 def req_src_validator(request, method):
-    if (request
-        and hasattr(request, 'accepted_renderer')
-            and request.accepted_renderer.format == method):
-        return True
+    if not request:
+        return False
+    
+    if method == 'api':
+        return request.path.startswith('/api/')
+
+    if method == 'html':
+        return not request.path.startswith('/api/')
+
     return False
+
+
 class TagFieldSerializer(TagListSerializerField):
     def to_internal_value(self, value):
         request = self.context.get('request')
-
         is_api = req_src_validator(request, 'api')
-        if (
-                is_api
-                and isinstance(value, list)
-                and len(value) == 1
-                and isinstance(value[0], str)):
-            value = re.split(r'[, .\s]+', value[0])
-        
         is_html = req_src_validator(request, 'html')
-        if is_html: 
-            print("html request source")
+
+        if is_html:
+            print("HTML request source — skipping tag processing")
+            return super().to_internal_value(value)
+
+        if is_api:
+            if isinstance(value, str):
+                try:
+                    value = json.loads(value)
+                except Exception:
+                    value = [tag.strip()
+                            for tag in value.split(',') if tag.strip()]
+                    
+            elif isinstance(value, list) and len(value) == 1 and isinstance(value[0], str):
+                value = [tag.strip()
+                        for tag in value[0].split(',') if tag.strip()]
 
         return super().to_internal_value(value)
     
@@ -48,6 +66,7 @@ class TokenPairSerializer(TokenObtainPairSerializer):
         token['id'] = user.id 
         token['username'] = user.username
         token['is_admin'] = user.is_superuser
+        token['is_staff'] = user.is_staff
         token['is_mod'] = user.groups.filter(name="moderators").exists()
         return token
     
@@ -58,9 +77,11 @@ class CustomTokenRefreshSerializer(TokenRefreshSerializer):
 
 # Model Serializers # 
 class UserSerializer(ModelSerializer):
+    is_mod = serializers.BooleanField(default=False)
+    is_admin = serializers.BooleanField(default=False, write_only=True)
     class Meta:
         model = User
-        fields = ['id', 'username', 'password', 'email', 'first_name', 'last_name']
+        fields = ['id', 'username', 'password', 'email', 'first_name', 'last_name', 'is_mod', 'is_admin']
         extra_kwargs = {
             'id': {'read_only': True},
             'username': {'required': True, 'min_length': 3},
@@ -83,7 +104,7 @@ class UserSerializer(ModelSerializer):
             attrs.get('username'), attrs.get('email'),
             attrs.get('first_name'), attrs.get('last_name')
         ] if attr):
-            raise ValidationError("Password can't contain personal info.")
+            raise ValidationError("Password can't contain personal your email, first or last name.")
         return attrs
     
     def validate_password(self, value):
@@ -92,10 +113,22 @@ class UserSerializer(ModelSerializer):
         return value
     
     def create(self, validated_data):
+        is_mod = validated_data.pop('is_mod', False)
+        is_admin = validated_data.pop('is_admin', False)
         password = validated_data.pop('password')
         user = User(**validated_data)
         user.set_password(password)
+        
+        if is_admin:
+            user.is_staff = True
         user.save()
+        if is_mod or is_admin:
+            try:
+                mod_group = Group.objects.get(name="moderators")
+            except Group.DoesNotExist:
+                print("error adding mod to mods group")
+            user.groups.add(mod_group)
+        
         return user
         
     def update(self, instance:User, validated_data):
@@ -111,48 +144,73 @@ class UserProfileSerializer(ModelSerializer):
         model = UserProfile
         fields = '__all__'
 
+
+class ArticleLikeSerializer(ModelSerializer):
+    username = serializers.CharField(source='user.user.username', read_only=True)
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    
+    class Meta:
+        model = ArticleLike
+        fields = '__all__'
+
+
+class CommentLikeSerializer(ModelSerializer):
+    class Meta:
+        model = CommentLike
+        fields = '__all__'
+
+
 class ArticleSerializer(TaggitSerializer, ModelSerializer):
-    tags = TagFieldSerializer(style={'base_template': 'textarea.html'})
     author = HiddenField(default=CurrentUserDefault())
     author_id = SerializerMethodField()
     author_name = SerializerMethodField()
-    published_at = serializers.DateTimeField(format="%B %d, %Y, %I:%M %p")
-    updated_at = serializers.DateTimeField(format="%B %d, %Y, %I:%M %p")
-    created_at = serializers.DateTimeField(format="%B %d, %Y, %I:%M %p")
+    likes = SerializerMethodField()
+    tags = TagFieldSerializer()
+
+    published_at = serializers.DateTimeField(
+        format="%B %d, %Y, %I:%M %p", required=False)
+    updated_at = serializers.DateTimeField(
+        format="%B %d, %Y, %I:%M %p", required=False)
+    created_at = serializers.DateTimeField(
+        format="%B %d, %Y, %I:%M %p", required=False)
 
     class Meta:
         model = Article
         fields = '__all__'
-    
+        extra_kwargs = {
+            'title': {'error_messages': {'required': 'Title is required.', 'blank': 'Please enter a title.'}},
+            'tags': {'error_messages': {'required': 'Tags cannot be empty.'}},
+            'status': {'error_messages': {'required': 'Status is required.', 'blank': 'Please enter a status.'}},
+        }
+
     def get_author_id(self, obj):
         return obj.author.id
-    def get_author_name(self,obj):
+
+    def get_author_name(self, obj):
         return obj.author.user.username
+    
+    def get_likes(self, obj):
+        likes = obj.likes.all()
+        return ArticleLikeSerializer(likes, many=True).data
+
 
 class CommentSerializer(ModelSerializer):
     author = HiddenField(default=CurrentUserDefault())
     author_name = SerializerMethodField()
     replies = SerializerMethodField()
 
-    published_at = serializers.DateTimeField(format="%B %d, %Y, %I:%M %p")
-    updated_at = serializers.DateTimeField(format="%B %d, %Y, %I:%M %p")
+    published_at = serializers.DateTimeField(
+        format="%B %d, %Y, %I:%M %p", read_only=True)
+    updated_at = serializers.DateTimeField(
+        format="%B %d, %Y, %I:%M %p", read_only=True)
 
     class Meta:
         model = Comment
         fields = '__all__'
 
-    def get_author_name(self,obj):
+    def get_author_name(self, obj):
         return obj.author.user.username
+
     def get_replies(self, obj):
         replies = Comment.objects.filter(reply_to=obj)
         return CommentSerializer(replies, many=True).data
-
-class ArticleLikeSerializer(ModelSerializer):
-    class Meta:
-        model = ArticleLike
-        fields = '__all__'
-
-class CommentLikeSerializer(ModelSerializer):
-    class Meta:
-        model = CommentLike
-        fields = '__all__'

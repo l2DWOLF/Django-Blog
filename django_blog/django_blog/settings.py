@@ -10,7 +10,8 @@ SECRET_KEY = config('APP_SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
+ALLOWED_HOSTS = ["127.0.0.1", "localhost",
+                "10.100.102.4:5173", "10.100.102.4"]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -44,13 +45,9 @@ MIDDLEWARE = [
 
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8000",
-    "http://127.0.0.1:8000",
-    "http://localhost:8081",
-    "http://127.0.0.1:8081",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-    "http://127.0.0.1:8000"
+    "http://10.100.102.4:5173",
 ]
 
 ROOT_URLCONF = 'django_blog.urls'

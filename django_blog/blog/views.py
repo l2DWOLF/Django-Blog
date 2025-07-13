@@ -71,7 +71,7 @@ class AuthViewSet(ViewSet):
         return Response({"token": token.key, 'jwt': jwt})
 
     @action(detail=False, methods=['post', 'get'],
-            permission_classes=[IsAuthenticated])
+            permission_classes=[])
     def logout(self, request):
         try:
             logout(request)
@@ -79,13 +79,21 @@ class AuthViewSet(ViewSet):
                 request.user.auth_token.delete()
             
             refresh_token = request.data.get("refresh")
-            if refresh_token:
-                token = RefreshToken(refresh_token)
-                token.blacklist()
+            try:
+                if refresh_token:
+                    try: 
+                        token = RefreshToken(refresh_token)
+                        token.blacklist()
+                        print("[LOGOUT] Refresh token blacklisted successfully.")
+                    except Exception as e:
+                        print("[LOGOUT] expired token.", e)
+            except Exception as e:
+                print("[LOGOUT] Unexpected error during logout:", e)
+                return Response({"detail": "Logout failed", "error": str(e)}, status=400)
         except Exception as e:
             print(e)
-
         return Response({"message": f"you're now logged out {request.user.username}, see you soon!"})
+    
 # Refresh Token View # 
 class CustomTokenRefreshView(TokenRefreshView):
     serializer_class = CustomTokenRefreshSerializer
@@ -115,11 +123,14 @@ class ArticlesViewSet(ModelViewSet):
     filter_backends = [SearchFilter, OrderingFilter, DjangoFilterBackend]
     filterset_fields = ['author', 'title',
                         'content', 'published_at', 'updated_at']
-    search_fields = ['title', 'content']
+    search_fields = ['author__user__username', 'title', 'content']
     mapping = {
         'create': [CreateArticleUserThrottle, CreateArticleAnonThrottle],
         'list': [ListArticlesUserThrottle, ListArticlesAnonThrottle]
     }
+
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
 
     def get_throttles(self):
         throttles = self.mapping.get(self.action, [])
@@ -149,15 +160,31 @@ class CommentsViewSet(ModelViewSet):
         return super().list(request, *args, **kwargs)
 
     def create(self, request, *args, **kwargs):
-        data = request.data
+        data = request.data.copy() 
         reply_to = data.get('reply_to')
         article_id = parse_int(data.get('article'))
-    # validate replies article match
+
         if reply_to:
-            replied = Comment.objects.get(id=reply_to)
-            if replied and replied.article.id != article_id:
-                return Response({"error": "Comment reply Must be under the Same Article"}, status=400)
-        return super().create(request, *args, **kwargs)
+            try:
+                replied = Comment.objects.get(id=reply_to)
+                if replied.article.id != article_id:
+                    return Response({"error": "Comment reply must be under the same article."}, status=400)
+            except Comment.DoesNotExist:
+                return Response({"error": "Reply-to comment not found."}, status=404)
+
+        if 'author' not in data:
+            data['author'] = request.user.userprofile.id
+
+        serializer = self.get_serializer(
+            data=data, context={'request': request})
+        try:
+            serializer.is_valid(raise_exception=True)
+        except ValidationError as e:
+            print("🚨 Validation Error:", e.detail)
+            return Response(e.detail, status=400)
+
+        self.perform_create(serializer)
+        return Response(serializer.data, status=201)
 
     def get_permissions(self):
         if self.action == 'list':
@@ -166,11 +193,54 @@ class CommentsViewSet(ModelViewSet):
             return [IsAuthenticated()]
         return super().get_permissions()
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
+
+
 # Articles Like Model View Set #
 class ArticlesLikeViewSet(ModelViewSet):
     queryset = ArticleLike.objects.all()
     serializer_class = ArticleLikeSerializer
-    permission_classes = [IsAdminOrReadOnly]
+    permission_classes = [IsAuthenticated]
+
+    def create(self, request, *args, **kwargs):
+        user_profile = request.user.userprofile
+        article_id = request.data.get("article")
+        status_value = request.data.get("status")
+
+        if not article_id or not status_value:
+            return Response({"detail": "Article and status are required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            article = Article.objects.get(id=article_id)
+        except Article.DoesNotExist:
+            return Response({"detail": "Article not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        existing_like = ArticleLike.objects.filter(
+            user=user_profile, article=article).first()
+
+        # Toggle behavior
+        if existing_like:
+            if existing_like.status == status_value:
+                existing_like.delete()
+                return Response({"detail": f"{status_value} removed."}, status=status.HTTP_204_NO_CONTENT)
+            else:
+                existing_like.status = status_value
+                existing_like.save()
+                return Response(self.get_serializer(existing_like).data, status=status.HTTP_200_OK)
+
+        # No existing like/dislike → create new
+        serializer = self.get_serializer(
+            data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        article_like = serializer.save(user=user_profile)
+        return Response(self.get_serializer(article_like).data, status=status.HTTP_201_CREATED)
+
+
+
+
 # Comments Like Model View Set #
 class CommentsLikeViewSet(ModelViewSet):
     queryset = CommentLike.objects.all()

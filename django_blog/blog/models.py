@@ -23,7 +23,7 @@ class UserProfile(models.Model):
 STATUS_LIST = [
     ('draft', 'Draft'),
     ('publish', 'Publish'),
-    ('archvied', 'Archived')
+    ('archived', 'Archived')
 ]
 class Article(models.Model):
     author = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
@@ -31,14 +31,28 @@ class Article(models.Model):
         unique=True, validators=[
         MinLengthValidator(5), MaxLengthValidator(100),
         RegexValidator(regex = '^[a-zA-Z0-9].*$',
-                        message="Title must start with a letter or numner")
-    ])
+                        message="Title must start with a letter or number"),
+        ],
+        error_messages={
+            'required': 'title is required',
+            'blank': 'please enter a title',
+        },
+    )
     content = models.TextField(blank=False, null=False,
         unique=True, validators=[
         MinLengthValidator(15), MaxLengthValidator(4096)
-    ])
+        ],
+        error_messages={
+            'required': 'content is required',
+            'blank': 'please enter content',
+        },
+    )
     status = models.CharField(max_length=10, choices=STATUS_LIST,
-                                default='draft')
+                                default='draft', error_messages={
+                                    'required': 'status is required',
+                                    'blank': 'please enter a status',
+                                },
+    )
     comments = []
     tags = TaggableManager()
     created_at = models.DateTimeField(auto_now_add=True)
@@ -74,15 +88,17 @@ LIKE_STATUS = [
 # Articles Like Model #
 class ArticleLike(models.Model):
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
-    article = models.ForeignKey(Article, on_delete=models.CASCADE)
+    article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='likes')
     status = models.CharField(max_length=7, 
                 choices=LIKE_STATUS, default='like')
     created_at = models.DateTimeField(auto_now_add=True)
+
     class Meta:
         unique_together = ['user', 'article']
 
     def __str__(self):
         return f"{self.user.username} - {self.status} - {self.article.pk}"
+    
 # Comments Like Model # 
 class CommentLike(models.Model):
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)

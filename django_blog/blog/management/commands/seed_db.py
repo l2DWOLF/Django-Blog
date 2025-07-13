@@ -4,7 +4,7 @@ from taggit.models import Tag
 from blog.models import *
 from blog.management.commands.seeding_tools import *
 from blog.management.commands.group_models_permissions import mods_group_permissions, users_group_permissions
-from random import choice
+from random import choice, randint, random
 
 
 class Command(BaseCommand):
@@ -15,12 +15,12 @@ class Command(BaseCommand):
 
         # Create groups and assign permissions
         mods_group, _ = Group.objects.get_or_create(name='moderators')
-        mods_group.permissions.add(*mods_group_permissions)
+        mods_group.permissions.set(mods_group_permissions)
 
         users_group, _ = Group.objects.get_or_create(name='users')
-        users_group.permissions.add(*users_group_permissions)
+        users_group.permissions.set(users_group_permissions)
 
-        # Create users
+        # Create main users
         admin_user, _ = User.objects.get_or_create(
             username='admin', defaults=admin_defaults)
         admin_user.set_password('AdminUser1234!')
@@ -37,6 +37,14 @@ class Command(BaseCommand):
         regular_user.set_password('UserUser1234!')
         regular_user.groups.add(users_group)
         regular_user.save()
+
+        # Create additional users
+        for i in range(50):
+            user, created = User.objects.get_or_create(username=f'user_{i}')
+            if created:
+                user.set_password('TestUser123!')
+                user.groups.add(users_group)
+                user.save()
 
         # Create tags
         for tag in tags_list:
@@ -66,9 +74,7 @@ class Command(BaseCommand):
                     content=f"Comment {j + 1} on article {i + 1}",
                     status='publish'
                 )
-                comment.save()
 
-                # Create 2-5 replies for each comment
                 for reply_index in range(2, 6):
                     reply, _ = Comment.objects.get_or_create(
                         author=moderator_user.userprofile if reply_index % 2 == 0 else regular_user.userprofile,
@@ -77,35 +83,72 @@ class Command(BaseCommand):
                         reply_to=comment,
                         status='publish'
                     )
-                    reply.save()
 
                     if reply_index == 2:
-                        nested_reply, _ = Comment.objects.get_or_create(
+                        Comment.objects.get_or_create(
                             author=moderator_user.userprofile,
                             article=article,
                             content=f"Nested reply to Reply {reply_index} on Comment {j + 1} Article {i + 1}",
                             reply_to=reply,
                             status='publish'
                         )
-                        nested_reply.save()
 
-        # Article & Comment Likes
-        users = UserProfile.objects.all()
-        for user in users:
-            for article in Article.objects.all():
-                if not ArticleLike.objects.filter(user=user, article=article).exists():
-                    ArticleLike.objects.create(
-                        user=user,
-                        article=article,
-                        status=choice(['like', 'dislike'])
-                    )
-            for comment in Comment.objects.all():
-                if not CommentLike.objects.filter(user=user, comment=comment).exists():
-                    CommentLike.objects.create(
-                        user=user,
-                        comment=comment,
-                        status=choice(['like', 'dislike'])
-                    )
+        users = list(UserProfile.objects.select_related('user'))
+        articles = Article.objects.all()
+        comments = Comment.objects.all()
+
+        # Article Likes/Dislikes
+        for article in articles:
+            num_likes = randint(10, 40)
+            # 1%–5% of likes
+            num_dislikes = max(1, int(num_likes * randint(1, 5) / 100))
+
+            total_voters = set()
+
+            # Add likes
+            while len(total_voters) < num_likes:
+                user = choice(users)
+                if user.id in total_voters:
+                    continue
+                total_voters.add(user.id)
+                ArticleLike.objects.update_or_create(
+                    user=user,
+                    article=article,
+                    defaults={'status': 'like'}
+                )
+
+            # Add dislikes
+            dislike_count = 0
+            while dislike_count < num_dislikes:
+                user = choice(users)
+                if user.id in total_voters:
+                    continue
+                total_voters.add(user.id)
+                ArticleLike.objects.update_or_create(
+                    user=user,
+                    article=article,
+                    defaults={'status': 'dislike'}
+                )
+                dislike_count += 1
+
+        # Comment Likes/Dislikes
+        for comment in comments:
+            total_votes = randint(3, 10)
+            voted_users = set()
+
+            while len(voted_users) < total_votes and len(voted_users) < len(users):
+                user = choice(users)
+                if user.id in voted_users:
+                    continue
+                voted_users.add(user.id)
+
+                status = 'dislike' if random() < 0.20 else 'like'
+
+                CommentLike.objects.update_or_create(
+                    user=user,
+                    comment=comment,
+                    defaults={'status': status}
+                )
 
         self.stdout.write(self.style.SUCCESS(
             'Seeding Completed Successfully.'))
