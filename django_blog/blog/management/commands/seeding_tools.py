@@ -1,13 +1,16 @@
 
 admin_defaults = {
+    'email': 'admin@user.com',
     'is_superuser': True,
     'is_staff': True
 }
 moderator_defaults = {
+    'email': 'mod@user.com',
     'is_superuser': False,
     'is_staff': True
 }
 user_defaults = {
+    'email': 'regular@user.com',
     'is_superuser': False,
     'is_staff': False
 }

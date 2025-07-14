@@ -23,7 +23,7 @@ from .serializers import *
 
 # Auth View Set #
 class AuthViewSet(ViewSet):
-    queryset = User.objects.all()
+    queryset = CustomUser.objects.all()
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
     throttling_classes = [AnonRateThrottle, UserRateThrottle]
@@ -100,7 +100,7 @@ class CustomTokenRefreshView(TokenRefreshView):
 
 # Users Model View Set #
 class UsersViewSet(ModelViewSet):
-    queryset = User.objects.all()
+    queryset = CustomUser.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAdminOrOwner]
 

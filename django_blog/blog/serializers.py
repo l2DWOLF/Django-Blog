@@ -7,7 +7,7 @@ import rest_framework.views
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer 
 from taggit.serializers import (TagListSerializerField, TaggitSerializer)
 from django.contrib.auth.models import User, Group
-from blog.models import UserProfile, Article, Comment, ArticleLike, CommentLike
+from blog.models import CustomUser, UserProfile, Article, Comment, ArticleLike, CommentLike
 from core.utils import to_lower_strip
 from blog.management.commands.seeding_tools import admin_defaults
 
@@ -80,7 +80,7 @@ class UserSerializer(ModelSerializer):
     is_mod = serializers.BooleanField(default=False)
     is_admin = serializers.BooleanField(default=False, write_only=True)
     class Meta:
-        model = User
+        model = CustomUser
         fields = ['id', 'username', 'password', 'email', 'first_name', 'last_name', 'is_mod', 'is_admin']
         extra_kwargs = {
             'id': {'read_only': True},
@@ -116,7 +116,7 @@ class UserSerializer(ModelSerializer):
         is_mod = validated_data.pop('is_mod', False)
         is_admin = validated_data.pop('is_admin', False)
         password = validated_data.pop('password')
-        user = User(**validated_data)
+        user = CustomUser(**validated_data)
         user.set_password(password)
         
         if is_admin:
@@ -131,7 +131,7 @@ class UserSerializer(ModelSerializer):
         
         return user
         
-    def update(self, instance:User, validated_data):
+    def update(self, instance:CustomUser, validated_data):
         password = validated_data.pop('password', None)
         for key, value in validated_data.items():
             setattr(instance, key, value)

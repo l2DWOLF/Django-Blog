@@ -7,7 +7,7 @@ class BlogConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'blog'
 
-    @receiver(post_save, sender='auth.User')
+    @receiver(post_save, sender='blog.CustomUser')
     def perform_new_user_group_profile(sender, instance, created, **kwargs):
         from django.contrib.auth.models import Group, User
         from rest_framework.authtoken.models import Token

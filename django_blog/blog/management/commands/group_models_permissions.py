@@ -1,170 +1,83 @@
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from blog.models import Article, ArticleLike, Comment, CommentLike, UserProfile
 
-
-# User Permissions # 
-view_user_permissions = Permission.objects.get(
-    codename='view_user',
-    content_type=ContentType.objects.get_for_model(User)
-)
-add_user_permissions = Permission.objects.get(
-    codename='add_user',
-    content_type=ContentType.objects.get_for_model(User)
-)
-change_user_permissions = Permission.objects.get(
-    codename='change_user',
-    content_type=ContentType.objects.get_for_model(User)
-)
-delete_user_permissions = Permission.objects.get(
-    codename='delete_user',
-    content_type=ContentType.objects.get_for_model(User)
-)
-# UserProfile Permissions # 
-view_userprofile_permissions = Permission.objects.get(
-    codename='view_userprofile',
-    content_type=ContentType.objects.get_for_model(UserProfile)
-)
-add_userprofile_permissions = Permission.objects.get(
-    codename='add_userprofile',
-    content_type=ContentType.objects.get_for_model(UserProfile)
-)
-change_userprofile_permissions = Permission.objects.get(
-    codename='change_userprofile',
-    content_type=ContentType.objects.get_for_model(UserProfile)
-)
-delete_userprofile_permissions = Permission.objects.get(
-    codename='delete_userprofile',
-    content_type=ContentType.objects.get_for_model(UserProfile)
-)
-# Article Permissions #
-view_article_permission = Permission.objects.get(
-    codename='view_article',
-    content_type=ContentType.objects.get_for_model(Article)
-)
-add_article_permission = Permission.objects.get(
-    codename='add_article',
-    content_type=ContentType.objects.get_for_model(Article)
-)
-change_article_permission = Permission.objects.get(
-    codename='change_article',
-    content_type=ContentType.objects.get_for_model(Article)
-)
-delete_article_permission = Permission.objects.get(
-    codename='delete_article',
-    content_type=ContentType.objects.get_for_model(Article)
-)
-# Comment Permissions #
-view_comment_permission = Permission.objects.get(
-    codename='view_comment',
-    content_type=ContentType.objects.get_for_model(Comment)
-)
-add_comment_permission = Permission.objects.get(
-    codename='add_comment',
-    content_type=ContentType.objects.get_for_model(Comment)
-)
-change_comment_permission = Permission.objects.get(
-    codename='change_comment',
-    content_type=ContentType.objects.get_for_model(Comment)
-)
-delete_comment_permission = Permission.objects.get(
-    codename='delete_comment',
-    content_type=ContentType.objects.get_for_model(Comment)
-)
-# Article Likes Permissions #
-view_articlelike_permission = Permission.objects.get(
-    codename='view_articlelike',
-    content_type=ContentType.objects.get_for_model(ArticleLike)
-)
-add_articlelike_permission = Permission.objects.get(
-    codename='add_articlelike',
-    content_type=ContentType.objects.get_for_model(ArticleLike)
-)
-change_articlelike_permission = Permission.objects.get(
-    codename='change_articlelike',
-    content_type=ContentType.objects.get_for_model(ArticleLike)
-)
-delete_articlelike_permission = Permission.objects.get(
-    codename='delete_articlelike',
-    content_type=ContentType.objects.get_for_model(ArticleLike)
-)
-# Comment Likes Permissions #
-view_commentlike_permission = Permission.objects.get(
-    codename='view_commentlike',
-    content_type=ContentType.objects.get_for_model(CommentLike)
-)
-add_commentlike_permission = Permission.objects.get(
-    codename='add_commentlike',
-    content_type=ContentType.objects.get_for_model(CommentLike)
-)
-change_commentlike_permission = Permission.objects.get(
-    codename='change_commentlike',
-    content_type=ContentType.objects.get_for_model(CommentLike)
-)
-delete_commentlike_permission = Permission.objects.get(
-    codename='delete_commentlike',
-    content_type=ContentType.objects.get_for_model(CommentLike)
-)
+CustomUser = get_user_model()
 
 
-mods_group_permissions = [
-    view_user_permissions,
-    add_user_permissions,
-    change_user_permissions,
-    delete_user_permissions,
+def get_permission(codename, model):
+    content_type = ContentType.objects.get_for_model(model)
+    permission, created = Permission.objects.get_or_create(
+        codename=codename,
+        content_type=content_type,
+        defaults={
+            'name': f"Can {codename.replace('_', ' ')} {model._meta.verbose_name}"}
+    )
+    return permission
 
-    view_userprofile_permissions,
-    add_userprofile_permissions,
-    change_userprofile_permissions,
-    delete_userprofile_permissions,
 
-    view_article_permission,
-    add_article_permission,
-    change_article_permission,
-    delete_article_permission,
+def get_mods_group_permissions():
+    return [
+        get_permission('view_customuser', CustomUser),
+        get_permission('add_customuser', CustomUser),
+        get_permission('change_customuser', CustomUser),
+        get_permission('delete_customuser', CustomUser),
 
-    view_comment_permission,
-    add_comment_permission,
-    change_comment_permission,
-    delete_comment_permission,
+        get_permission('view_userprofile', UserProfile),
+        get_permission('add_userprofile', UserProfile),
+        get_permission('change_userprofile', UserProfile),
+        get_permission('delete_userprofile', UserProfile),
 
-    view_articlelike_permission,
-    add_articlelike_permission,
-    change_articlelike_permission,
-    delete_articlelike_permission,
+        get_permission('view_article', Article),
+        get_permission('add_article', Article),
+        get_permission('change_article', Article),
+        get_permission('delete_article', Article),
 
-    view_commentlike_permission,
-    add_commentlike_permission,
-    change_commentlike_permission,
-    delete_commentlike_permission,
-]
-users_group_permissions = [
+        get_permission('view_comment', Comment),
+        get_permission('add_comment', Comment),
+        get_permission('change_comment', Comment),
+        get_permission('delete_comment', Comment),
 
-    view_user_permissions,
-    add_user_permissions,
-    change_user_permissions,
-    delete_user_permissions,
+        get_permission('view_articlelike', ArticleLike),
+        get_permission('add_articlelike', ArticleLike),
+        get_permission('change_articlelike', ArticleLike),
+        get_permission('delete_articlelike', ArticleLike),
 
-    view_userprofile_permissions,
-    add_userprofile_permissions,
-    change_userprofile_permissions,
-    delete_userprofile_permissions,
+        get_permission('view_commentlike', CommentLike),
+        get_permission('add_commentlike', CommentLike),
+        get_permission('change_commentlike', CommentLike),
+        get_permission('delete_commentlike', CommentLike),
+    ]
 
-    view_article_permission,
 
-    view_comment_permission,
-    add_comment_permission,
-    change_comment_permission,
-    delete_comment_permission,
 
-    view_articlelike_permission,
-    add_articlelike_permission,
-    change_articlelike_permission,
-    delete_articlelike_permission,
+def get_users_group_permissions():
+    return [
+        get_permission('view_user', CustomUser),
+        get_permission('add_user', CustomUser),
+        get_permission('change_user', CustomUser),
+        get_permission('delete_user', CustomUser),
 
-    view_commentlike_permission,
-    add_commentlike_permission,
-    change_commentlike_permission,
-    delete_commentlike_permission,
-]
+        get_permission('view_userprofile', UserProfile),
+        get_permission('add_userprofile', UserProfile),
+        get_permission('change_userprofile', UserProfile),
+        get_permission('delete_userprofile', UserProfile),
+
+        get_permission('view_article', Article),
+
+        get_permission('view_comment', Comment),
+        get_permission('add_comment', Comment),
+        get_permission('change_comment', Comment),
+        get_permission('delete_comment', Comment),
+
+        get_permission('view_articlelike', ArticleLike),
+        get_permission('add_articlelike', ArticleLike),
+        get_permission('change_articlelike', ArticleLike),
+        get_permission('delete_articlelike', ArticleLike),
+
+        get_permission('view_commentlike', CommentLike),
+        get_permission('add_commentlike', CommentLike),
+        get_permission('change_commentlike', CommentLike),
+        get_permission('delete_commentlike', CommentLike),
+    ]

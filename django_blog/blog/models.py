@@ -1,11 +1,18 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, AbstractUser
 from taggit.managers import TaggableManager
 from django.core.validators import MinLengthValidator, MaxLengthValidator, RegexValidator
 
+# Custom User Model # 
+class CustomUser(AbstractUser):
+    email = models.EmailField(unique=True, null=True)
+
+    def __str__(self):
+        return self.username
+
 # Users Profile Model #
 class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, unique = True)
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, unique = True)
     bio = models.TextField(max_length=500, blank=True, unique=True)
     profile_pic = models.ImageField(upload_to="profile_pics", blank=True)
     birth_date = models.DateField(null=True, blank=True)
