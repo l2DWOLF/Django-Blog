@@ -17,6 +17,7 @@ from rest_framework_simplejwt.views import TokenRefreshView
 from core.authentication import generate_jwt_tokens
 from core.utils import nest_comments, parse_int
 from blog.throttling import *
+from blog.management.commands.seeding_tools import user_defaults
 from .models import *
 from .serializers import *
 
@@ -65,6 +66,9 @@ class AuthViewSet(ViewSet):
         serializer = UserSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
+
+        UserProfile.objects.get_or_create(user=user)
+
         token, _ = Token.objects.get_or_create(user=user)
         jwt = generate_jwt_tokens(user)
         login(request, user)
@@ -103,6 +107,40 @@ class UsersViewSet(ModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAdminOrOwner]
+
+    @action(detail=False, methods=['put', 'patch'], permission_classes=[IsAuthenticated])
+    def update_account(self, request):
+        user = request.user
+        user_profile = user.userprofile 
+
+        if request.user.id != user.id and not request.user.is_superuser:
+            return Response({"detail": "you do not have permission to edit this account."}, status=403)
+
+        user_data = request.data.get("user", {})
+        profile_data = request.data.get("userprofile", {})
+
+        user_serializer = UserSerializer(user, data=user_data, partial=True, context={'request': request})
+        profile_serializer = UserProfileSerializer(user_profile, data=profile_data, partial=True, context={'request': request})
+
+        user_is_valid = user_serializer.is_valid()
+        profile_is_valid = profile_serializer.is_valid()
+
+        if user_is_valid and profile_is_valid:
+            user_serializer.save()
+            profile_serializer.save()
+            return Response({
+                "user": user_serializer.data,
+                "userprofile": profile_serializer.data   
+            }, status=status.HTTP_200_OK)
+        
+        return Response({
+            "backend_error": [
+                *[f"user.{k}: {v[0]}" for k,
+                    v in user_serializer.errors.items()],
+                *[f"profile.{k}: {v[0]}" for k,
+                    v in profile_serializer.errors.items()],
+            ]
+        }, status=status.HTTP_400_BAD_REQUEST)
 
 # UserProfiles Model View Set #
 class UserProfilesViewSet(ModelViewSet):

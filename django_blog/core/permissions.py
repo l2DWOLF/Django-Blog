@@ -8,57 +8,30 @@ CustomUser = get_user_model()
 
 class IsAdminOrModerator(BasePermission):
     def has_permission(self, request, view):
-        # Admin check
-        if request.user and request.user.is_authenticated and request.user.is_superuser:
-            return True
-
-        # Moderator group check
         return (
             request.user and
-            request.user.is_authenticated and
-            request.user.groups.filter(name='moderators').exists()
+            request.user.is_authenticated and (
+                request.user.is_superuser or
+                request.user.groups.filter(name='moderators').exists()
+            )
         )
-
 
 class IsOwnerOrReadOnly(BasePermission):
     def has_object_permission(self, request, view, obj):
-        # Allow read-only access
         if request.method in permissions.SAFE_METHODS:
             return True
-
-        # Check if object has author attribute
-        if hasattr(obj, 'author'):
-            return obj.author.user == request.user
-        return False
-
+        return is_owner(request.user, obj)
 
 class IsOwnerOrModelPermissions(DjangoModelPermissions):
     def has_object_permission(self, request, view, obj):
         if request.method in permissions.SAFE_METHODS:
             return True
-
-        # UserProfile: allow user or admin
-        if isinstance(obj, UserProfile):
-            return obj.user == request.user or request.user.is_superuser
-
-        # CustomUser: allow self or admin
-        if isinstance(obj, CustomUser):
-            return obj == request.user or request.user.is_superuser
-
-        # Articles & Comments: allow owner, moderator, or admin
-        if isinstance(obj, Article) or isinstance(obj, Comment):
-            return (
-                obj.author.user == request.user
-                or request.user.is_superuser
-                or request.user.is_staff
-            )
-
-        # Likes: readonly for moderators/admins
-        if isinstance(obj, ArticleLike) or isinstance(obj, CommentLike):
-            return request.method in permissions.SAFE_METHODS
-
-        return False
-
+        return (
+            is_owner(request.user, obj) or
+            request.user.is_superuser or
+            request.user.has_perm(
+                f'{obj._meta.app_label}.change_{obj._meta.model_name}')
+        )
 
 class IsAdminOrReadOnly(BasePermission):
     def has_permission(self, request, view):
@@ -69,9 +42,27 @@ class IsAdminOrReadOnly(BasePermission):
                 return request.method in permissions.SAFE_METHODS
         return request.method in permissions.SAFE_METHODS
 
-
 class IsAdminOrOwner(BasePermission):
-    def has_permission(self, request, view):
+    def has_object_permission(self, request, view, obj):
         if request.user.is_superuser:
             return True
-        return request.user == view.get_object().user
+        return is_owner(request.user, obj)
+
+def is_owner(user, obj):
+    if not user or not user.is_authenticated:
+        return False
+
+    if isinstance(obj, UserProfile):
+        return obj.user == user
+
+    if isinstance(obj, CustomUser):
+        return obj == user
+
+    if hasattr(obj, 'user'):
+        return obj.user == user
+
+    if hasattr(obj, 'author'):
+        author = obj.author
+        return getattr(author, 'user', None) == user
+
+    return False

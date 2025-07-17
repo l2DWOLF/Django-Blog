@@ -20,7 +20,7 @@ def blog_except_handler(exc, context):
     for exc_type, message, status_code in [
         (Http404, "Resource Not Found.", status.HTTP_404_NOT_FOUND),
         (ValueError, f"{str(exc)} - Invalid Input.", status.HTTP_400_BAD_REQUEST),
-        (AttributeError, f"{str(exc)} - Attribute Error Occurred.", status.HTTP_400_BAD_REQUEST),
+       # (AttributeError, f"{str(exc)} - Attribute Error Occurred.", status.HTTP_400_BAD_REQUEST),
         (PermissionDenied, "Permission Denied.", status.HTTP_403_FORBIDDEN),
         (DRFPermissionDenied, str(exc), status.HTTP_403_FORBIDDEN),
         (Throttled, "Throttled Request, too many requests - Please try again soon..",
@@ -58,7 +58,7 @@ def blog_except_handler(exc, context):
     if isinstance(exc, ProtectedError):
         logger.warning(f"ProtectedError caught: Attempt to delete a model with active depenencies.")
         return Response(
-            {"backend_error": ["Cannot delete this comment because it has replies. You can edit the comment/reply instead."]},
+            {"backend_error": ["Cannot delete this model because it has dependencies. You can edit the comment/reply instead."]},
             status=status.HTTP_400_BAD_REQUEST)
     
 # Catch All Exceptions # 

@@ -76,9 +76,12 @@ class CustomTokenRefreshSerializer(TokenRefreshSerializer):
         return data
 
 # Model Serializers # 
+
+# User Serializer #
 class UserSerializer(ModelSerializer):
     is_mod = serializers.BooleanField(default=False)
     is_admin = serializers.BooleanField(default=False, write_only=True)
+
     class Meta:
         model = CustomUser
         fields = ['id', 'username', 'password', 'email', 'first_name', 'last_name', 'is_mod', 'is_admin']
@@ -92,25 +95,31 @@ class UserSerializer(ModelSerializer):
         }
 
     def validate(self, attrs):
-        attrs['username'] = to_lower_strip(attrs['username'])
-        attrs['email'] = to_lower_strip(attrs['email'])
+        if 'username' in attrs:
+            attrs['username'] = to_lower_strip(attrs['username'])
+        if 'email' in attrs:
+            attrs['email'] = to_lower_strip(attrs['email'])
         if attrs.get('first_name'):
             attrs['first_name'] = to_lower_strip(attrs['first_name'])
         if attrs.get('last_name'):
             attrs['last_name'] = to_lower_strip(attrs['last_name'])
 
-        password = attrs.get('password')
-        if any(attr in password for attr in [
-            attrs.get('username'), attrs.get('email'),
-            attrs.get('first_name'), attrs.get('last_name')
-        ] if attr):
-            raise ValidationError("Password can't contain personal your email, first or last name.")
         return attrs
     
-    def validate_password(self, value):
-        if len(value)  < 8 :
-            raise ValidationError('Password Must contain 8 or more characters')
-        return value
+    def validate_password(self, password):
+        if len(password) < 8:
+            raise serializers.ValidationError(
+                'Password must contain 8 or more characters.')
+        
+        user_data = self.initial_data
+
+        sensitive_fields = ['username', 'email', 'first_name', 'last_name']
+        for field in sensitive_fields:
+            val = user_data.get(field)
+            if val and val.lower() in password.lower():
+                raise serializers.ValidationError(
+                    "Password can't contain your personal info like username, email, first or last name.")
+        return password
     
     def create(self, validated_data):
         is_mod = validated_data.pop('is_mod', False)
@@ -135,23 +144,32 @@ class UserSerializer(ModelSerializer):
         password = validated_data.pop('password', None)
         for key, value in validated_data.items():
             setattr(instance, key, value)
-        instance.set_password(password)
+        if password:
+            instance.set_password(password)
         instance.save()
         return instance
 
 class UserProfileSerializer(ModelSerializer):
+    updated_at = serializers.DateTimeField(
+    format="%B %d, %Y, %I:%M %p", required=False)
+    created_at = serializers.DateTimeField(
+    format="%B %d, %Y, %I:%M %p", required=False)
+
     class Meta:
         model = UserProfile
         fields = '__all__'
 
 
 class ArticleLikeSerializer(ModelSerializer):
-    username = serializers.CharField(source='user.user.username', read_only=True)
+    username = serializers.SerializerMethodField()
     user = serializers.HiddenField(default=serializers.CurrentUserDefault())
     
     class Meta:
         model = ArticleLike
         fields = '__all__'
+
+    def get_username(self, obj):
+        return getattr(getattr(obj.user, 'user', obj.user), 'username', 'Unknown')
 
 
 class CommentLikeSerializer(ModelSerializer):
@@ -183,11 +201,15 @@ class ArticleSerializer(TaggitSerializer, ModelSerializer):
             'status': {'error_messages': {'required': 'Status is required.', 'blank': 'Please enter a status.'}},
         }
 
+    def update(self, instance, validated_data):
+        validated_data.pop('author', None)
+        return super().update(instance, validated_data)
+    
     def get_author_id(self, obj):
         return obj.author.id
 
     def get_author_name(self, obj):
-        return obj.author.user.username
+        return getattr(getattr(obj.author, 'user', obj.author), 'username', 'Unknown')
     
     def get_likes(self, obj):
         likes = obj.likes.all()
@@ -209,8 +231,12 @@ class CommentSerializer(ModelSerializer):
         fields = '__all__'
 
     def get_author_name(self, obj):
-        return obj.author.user.username
+        return getattr(getattr(obj.author, 'user', obj.author), 'username', 'Unknown')
 
     def get_replies(self, obj):
         replies = Comment.objects.filter(reply_to=obj)
         return CommentSerializer(replies, many=True).data
+
+    def update(self, instance, validated_data):
+        validated_data.pop('author', None)
+        return super().update(instance, validated_data)

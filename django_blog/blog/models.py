@@ -13,14 +13,24 @@ class CustomUser(AbstractUser):
 # Users Profile Model #
 class UserProfile(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, unique = True)
-    bio = models.TextField(max_length=500, blank=True, unique=True)
+    bio = models.TextField(max_length=500, blank=True, unique=False, validators=[
+        MinLengthValidator(3), MaxLengthValidator(500)
+    ])
     profile_pic = models.ImageField(upload_to="profile_pics", blank=True)
     birth_date = models.DateField(null=True, blank=True)
+    location = models.TextField(max_length=50, blank=True, validators=[
+        MinLengthValidator(2), MaxLengthValidator(1028)
+    ])
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.user.username}"
+    
+    def delete(self, *args, **kwargs):
+        user = self.user
+        super().delete(*args, **kwargs)
+        user.delete()
     
     @property
     def username(self):
@@ -74,10 +84,10 @@ class Comment(models.Model):
     author = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     article = models.ForeignKey(Article, on_delete=models.CASCADE)
     reply_to = models.ForeignKey('self', null=True, blank=True,
-                    default=None, on_delete=models.PROTECT)
+                    default=None, on_delete=models.CASCADE)
     content = models.TextField(blank=False, null=False,
                 validators=[MinLengthValidator(2), 
-                            MaxLengthValidator(2048)
+                            MaxLengthValidator(10288)
     ])
     status = models.CharField(max_length=10, choices=STATUS_LIST,
                             default='draft')
