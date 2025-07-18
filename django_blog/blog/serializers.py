@@ -159,6 +159,30 @@ class UserProfileSerializer(ModelSerializer):
         model = UserProfile
         fields = '__all__'
 
+class PublicUserProfileSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source='user.username')
+    first_name = serializers.CharField(source='user.first_name')
+    last_name = serializers.CharField(source='user.last_name')
+    admin_status = serializers.SerializerMethodField()
+    staff_admin_status = serializers.SerializerMethodField()
+    mod_status = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UserProfile
+        fields = [
+            'id', 'username',
+            'first_name', 'last_name', 'mod_status',
+            'staff_admin_status', 'admin_status',
+            'profile_pic', 'location', 'birth_date', 'bio', 
+            'created_at', 'updated_at'
+        ]
+    
+    def get_admin_status(self, obj):
+        return obj.user.is_superuser
+    def get_staff_admin_status(self, obj):
+        return obj.user.is_staff
+    def get_mod_status(self,obj):
+        return obj.user.groups.filter(name="moderators").exists()
 
 class ArticleLikeSerializer(ModelSerializer):
     username = serializers.SerializerMethodField()

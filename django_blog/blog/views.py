@@ -4,7 +4,7 @@ from django.contrib.auth import login, logout
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view
 from rest_framework.viewsets import ModelViewSet, ViewSet
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.serializers import AuthTokenSerializer
@@ -152,6 +152,20 @@ class UserProfilesViewSet(ModelViewSet):
         if self.action in ['list', 'retrieve']:
             return [IsAdminOrReadOnly()]
         return super().get_permissions()
+    
+# Public Profile View # 
+class PublicProfileViewSet(ViewSet):
+    def retrieve(self, request, pk=None):
+        try:
+            user = CustomUser.objects.get(pk=pk)
+            profile = user.userprofile
+        except CustomUser.DoesNotExist:
+            return Response({'backend_error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
+        except UserProfile.DoesNotExist:
+            return Response({'backend_error': 'User Profile not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = PublicUserProfileSerializer(profile)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 # Articles Model View Set #
 class ArticlesViewSet(ModelViewSet):
