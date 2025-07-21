@@ -110,17 +110,29 @@ class UsersViewSet(ModelViewSet):
 
     @action(detail=False, methods=['put', 'patch'], permission_classes=[IsAuthenticated])
     def update_account(self, request):
+        user_id = request.data.get("user_id")
         user = request.user
-        user_profile = user.userprofile 
 
-        if request.user.id != user.id and not request.user.is_superuser:
-            return Response({"detail": "you do not have permission to edit this account."}, status=403)
+        if user_id and str(user_id) != str(request.user.id):
+            if request.user.is_superuser or request.user.is_staff:
+                try:
+                    user = CustomUser.objects.get(id=user_id)
+                except CustomUser.DoesNotExist:
+                    return Response({"backend_error": "User not found"}, status=404)
+            else:
+                return Response({"detail": "You do not have permission to edit another user's account."}, status=403)
+        try:
+            user_profile = user.userprofile
+        except UserProfile.DoesNotExist:
+            return Response({"backend_error": "UserProfile not found."}, status=404)
 
         user_data = request.data.get("user", {})
         profile_data = request.data.get("userprofile", {})
 
-        user_serializer = UserSerializer(user, data=user_data, partial=True, context={'request': request})
-        profile_serializer = UserProfileSerializer(user_profile, data=profile_data, partial=True, context={'request': request})
+        user_serializer = UserSerializer(
+            user, data=user_data, partial=True, context={'request': request})
+        profile_serializer = UserProfileSerializer(
+            user_profile, data=profile_data, partial=True, context={'request': request})
 
         user_is_valid = user_serializer.is_valid()
         profile_is_valid = profile_serializer.is_valid()
@@ -130,13 +142,12 @@ class UsersViewSet(ModelViewSet):
             profile_serializer.save()
             return Response({
                 "user": user_serializer.data,
-                "userprofile": profile_serializer.data   
+                "userprofile": profile_serializer.data
             }, status=status.HTTP_200_OK)
-        
+
         return Response({
             "backend_error": [
-                *[f"user.{k}: {v[0]}" for k,
-                    v in user_serializer.errors.items()],
+                *[f"user.{k}: {v[0]}" for k, v in user_serializer.errors.items()],
                 *[f"profile.{k}: {v[0]}" for k,
                     v in profile_serializer.errors.items()],
             ]

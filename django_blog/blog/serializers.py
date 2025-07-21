@@ -154,10 +154,22 @@ class UserProfileSerializer(ModelSerializer):
     format="%B %d, %Y, %I:%M %p", required=False)
     created_at = serializers.DateTimeField(
     format="%B %d, %Y, %I:%M %p", required=False)
+    admin_status = serializers.SerializerMethodField()
+    staff_admin_status = serializers.SerializerMethodField()
+    mod_status = serializers.SerializerMethodField()
 
     class Meta:
         model = UserProfile
         fields = '__all__'
+
+    def get_admin_status(self, obj):
+        return obj.user.is_superuser
+
+    def get_staff_admin_status(self, obj):
+        return obj.user.is_staff
+
+    def get_mod_status(self, obj):
+        return obj.user.groups.filter(name="moderators").exists()
 
 class PublicUserProfileSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='user.username')
