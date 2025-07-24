@@ -91,7 +91,9 @@ class UserSerializer(ModelSerializer):
             'password': {'write_only': True, 'required': True},
             'email': {'required': True, 'min_length': 8},
             'first_name': {'required': False, 'min_length': 2},
-            'last_name': {'required': False, 'min_length': 2}
+            'last_name': {'required': False, 'min_length': 2},
+            "is_mod": {'write_only': True},
+            "is_admin": {'write_only': True},
         }
 
     def validate(self, attrs):
@@ -178,6 +180,11 @@ class PublicUserProfileSerializer(serializers.ModelSerializer):
     admin_status = serializers.SerializerMethodField()
     staff_admin_status = serializers.SerializerMethodField()
     mod_status = serializers.SerializerMethodField()
+
+    updated_at = serializers.DateTimeField(
+        format="%B %d, %Y, %I:%M %p", required=False)
+    created_at = serializers.DateTimeField(
+        format="%B %d, %Y, %I:%M %p", required=False)
 
     class Meta:
         model = UserProfile

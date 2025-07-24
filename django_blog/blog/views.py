@@ -256,10 +256,10 @@ class CommentsViewSet(ModelViewSet):
             return [IsAuthenticated()]
         return super().get_permissions()
 
-    def get_serializer_context(self):
+"""     def get_serializer_context(self):
         context = super().get_serializer_context()
         context['request'] = self.request
-        return context
+        return context """
 
 
 # Articles Like Model View Set #
@@ -294,7 +294,7 @@ class ArticlesLikeViewSet(ModelViewSet):
                 existing_like.save()
                 return Response(self.get_serializer(existing_like).data, status=status.HTTP_200_OK)
 
-        # No existing like/dislike → create new
+        # No existing like/dislike -> create new
         serializer = self.get_serializer(
             data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)

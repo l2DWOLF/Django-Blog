@@ -128,15 +128,14 @@ REST_FRAMEWORK = {
         'retrieve_article_user': '25/minute',
         'retrieve_article_anon': '15/minute',
 
-        'create_article_user': '5/minute',
-        'create_article_anon': '1/minute',
+        'create_article_user': '5/hour',
+        'create_article_anon': '1/day',
 
-        'update_article_user': '15/minute',
-        'update_article_anon': '1/minute',
+        'update_article_user': '20/minute',
+        'update_article_anon': '1/day',
 
         'delete_article_user': '10/minute',
-        'delete_article_anon': '1/minute',
-
+        'delete_article_anon': '1/day',
     },
 }
 
