@@ -9,3 +9,7 @@ __pycache__/
 
 .vscode/
 Thumbs.db
+
+/static/
+/media/
+__pycache__/

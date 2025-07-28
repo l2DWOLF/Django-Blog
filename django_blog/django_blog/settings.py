@@ -1,6 +1,7 @@
 from pathlib import Path
 from decouple import config
 from datetime import timedelta
+import dj_database_url
 import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -9,7 +10,8 @@ SECRET_KEY = config('APP_SECRET_KEY')
 
 DEBUG = False
 
-ALLOWED_HOSTS = ["127.0.0.1", "localhost",
+ALLOWED_HOSTS = ["127.0.0.1", "localhost", 
+                "django-blog-i0ni.onrender.com",
                 "10.100.102.4:5173", "10.100.102.4"]
 
 INSTALLED_APPS = [
@@ -35,6 +37,7 @@ AUTH_USER_MODEL = 'blog.CustomUser'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -56,6 +59,14 @@ ROOT_URLCONF = 'django_blog.urls'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+X_FRAME_OPTIONS = 'DENY'
+
 
 TEMPLATES = [
     {
@@ -79,14 +90,10 @@ TEMPLATES = [
 WSGI_APPLICATION = 'django_blog.wsgi.application'
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME'),
-        'USER': config('DB_USER'),
-        'PASSWORD': config('DB_PASSWORD'),
-        'HOST': config('DB_HOST'),
-        'PORT': config('DB_PORT'),
-    }
+    'default': dj_database_url.config(
+        default=f"postgresql://{config('DB_USER')}:{config('DB_PASSWORD')}@{config('DB_HOST')}:{config('DB_PORT')}/{config('DB_NAME')}",
+        conn_max_age=600
+    )
 }
 
 REST_FRAMEWORK = {
@@ -172,6 +179,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
