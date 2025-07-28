@@ -87,7 +87,7 @@ class Comment(models.Model):
                     default=None, on_delete=models.CASCADE)
     content = models.TextField(blank=False, null=False,
                 validators=[MinLengthValidator(2), 
-                            MaxLengthValidator(10288)
+                            MaxLengthValidator(1028)
     ])
     status = models.CharField(max_length=10, choices=STATUS_LIST,
                             default='draft')

@@ -1,0 +1,87 @@
+[
+    {
+        "title": "Getting Started with React",
+        "content": "React is a JavaScript library for building user interfaces.\n\nIt allows developers to create large web applications that update and render efficiently in response to data changes. Components are the building blocks of React apps.\n\nJSX lets you write HTML in JavaScript. React uses a virtual DOM to improve performance.\n\nIn this article, we'll walk through creating your first React app using `create-react-app`, understanding component lifecycles, and managing state with hooks like `useState` and `useEffect`.\n\nYou'll also learn how to create reusable components, pass data with props, and manage user input.\n\nBy the end, you'll understand how props, state, and effects work together to build responsive UIs.\n\nReact encourages breaking your UI into small, reusable pieces. Using tools like React DevTools, you'll gain insight into component hierarchies and state flows.\n\nWe’ll also touch on more advanced topics such as conditional rendering, list rendering with `.map()`, and how to work with controlled vs uncontrolled components.\n\nReact is widely used in both startups and enterprise-scale projects, so this foundation opens doors to many opportunities.",
+        "tags": [
+            "React",
+            "JavaScript",
+            "HTML"
+        ]
+    },
+    {
+        "title": "Understanding Django ORM",
+        "content": "Django’s Object-Relational Mapper (ORM) provides a high-level abstraction for database access.\n\nInstead of writing raw SQL, developers define models in Python. Django translates these models into queries behind the scenes.\n\nFor example, `Book.objects.filter(author__name='Alice')` becomes an SQL query that filters books by author.\n\nThis article covers relationships (OneToOne, ForeignKey, ManyToMany), query optimization, and how to leverage Django Admin with the ORM.\n\nMastering the ORM is key to writing scalable Django apps.\n\nWe also discuss `select_related` and `prefetch_related` for performance tuning. These allow you to optimize database hits in views that return related data.\n\nAnother vital concept is custom model managers and querysets, which enable encapsulating complex logic into reusable methods.\n\nYou'll also explore migrations — how Django tracks changes to models and generates SQL to evolve your database schema.\n\nFinally, we’ll touch on using the shell (`python manage.py shell`) to experiment with queries interactively — a powerful tool during development and debugging.",
+        "tags": [
+            "Django",
+            "Python",
+            "SQL"
+        ]
+    },
+    {
+        "title": "The Basics of C++ for Beginners",
+        "content": "C++ is a powerful systems programming language known for performance and memory control.\n\nIn this article, we cover syntax, variables, control structures, functions, and basic object-oriented programming concepts.\n\nYou'll also learn how to compile C++ code using g++, and understand the difference between header files and source files.",
+        "tags": [
+            "C++",
+            "Computer Science"
+        ]
+    },
+    {
+        "title": "Mastering SQL Joins",
+        "content": "SQL joins allow you to combine data from multiple tables based on related columns.\n\nThere are four main types:\n- INNER JOIN\n- LEFT JOIN\n- RIGHT JOIN\n- FULL OUTER JOIN\n\nWe'll walk through examples using a `users` and `orders` table, and visualize the results with diagrams.\n\nThis guide will help you write efficient and readable join queries.",
+        "tags": [
+            "SQL",
+            "Computer Science"
+        ]
+    },
+    {
+        "title": "Building APIs with Node.js",
+        "content": "Node.js is a runtime for executing JavaScript on the server.\n\nUsing Express.js, we can quickly spin up RESTful APIs with routing, middleware, and error handling.\n\nThis article walks you through:\n- Setting up an Express server\n- Creating routes and handling requests\n- Connecting to MongoDB\n\nBy the end, you'll have a working CRUD API you can test using Postman or connect to a frontend like React.\n\nWe also explore error handling techniques using middleware and status codes, including how to return proper `400`, `404`, or `500` responses.\n\nEnvironment configuration is handled using the `dotenv` package to separate sensitive keys and database URIs.\n\nYou'll also learn how to structure your project using models, controllers, and routers — a clean approach for scaling Node apps.\n\nFinally, we dive into deployment, using tools like PM2 for process management, and platforms like Heroku, Render, or Railway for hosting your backend.",
+        "tags": [
+            "Node",
+            "JavaScript",
+            "MongoDB"
+        ]
+    },
+    {
+        "title": "CSS Grid vs Flexbox",
+        "content": "CSS Grid and Flexbox are two modern layout systems in CSS.\n\nFlexbox is one-dimensional (row or column), ideal for distributing space within a container. Grid is two-dimensional, ideal for entire page layouts.\n\nThis article includes examples of each layout system, and helps you decide when to use one over the other.",
+        "tags": [
+            "CSS",
+            "HTML"
+        ]
+    },
+    {
+        "title": "Intro to MongoDB for Beginners",
+        "content": "MongoDB is a NoSQL database that stores data in flexible, JSON-like documents.\n\nThis guide covers the basics:\n- Collections and documents\n- Insert and query commands\n- Indexes and schema design\n\nWe'll also compare MongoDB with relational databases like PostgreSQL to highlight differences.",
+        "tags": [
+            "MongoDB",
+            "Node",
+            "JavaScript"
+        ]
+    },
+    {
+        "title": "Responsive Design Principles",
+        "content": "Responsive design ensures your web app works well across all devices.\n\nWe cover:\n- Media queries\n- Fluid grids\n- Viewport units\n- Mobile-first design\n\nExamples include turning a 3-column layout into a stacked layout on small screens.",
+        "tags": [
+            "CSS",
+            "HTML"
+        ]
+    },
+    {
+        "title": "Formik + Yup: Smarter Forms in React",
+        "content": "Formik is a popular library for managing forms in React, and Yup is its validation partner.\n\nYou’ll learn how to:\n- Set up Formik with `useFormik` or the `<Formik>` wrapper\n- Add field-level and schema-level validation with Yup\n- Handle submission, reset, and error states cleanly\n\nThis combo reduces boilerplate and makes large form handling a breeze.",
+        "tags": [
+            "React",
+            "JavaScript"
+        ]
+    },
+    {
+        "title": "Data Structures Every Developer Should Know",
+        "content": "Data structures are fundamental to writing efficient code.\n\nWe explain:\n- Arrays, linked lists, stacks, queues\n- Trees and graphs\n- Hash maps and sets\n\nEach section includes time complexities and when to use them in real-world apps like search engines, schedulers, and compilers.\n\nWe'll compare array operations (`O(1)` access vs `O(n)` search) and explain how queues power asynchronous tasks.\n\nGraphs come into play in social networks, recommendation engines, and shortest path problems. We also introduce basic graph traversal techniques like DFS and BFS.\n\nHash tables are great for constant-time lookups. We'll cover hash collisions and how to handle them via chaining or open addressing.\n\nBy learning these foundations, you'll be better prepared for technical interviews and building efficient applications that scale.",
+        "tags": [
+            "Computer Science",
+            "Python",
+            "C++"
+        ]
+    }
+]

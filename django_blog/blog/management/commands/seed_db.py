@@ -5,6 +5,9 @@ from blog.models import *
 from blog.management.commands.seeding_tools import *
 from blog.management.commands.group_models_permissions import get_mods_group_permissions, get_users_group_permissions
 from random import choice, randint, random
+import json
+from pathlib import Path
+
 
 
 class Command(BaseCommand):
@@ -54,18 +57,27 @@ class Command(BaseCommand):
             Tag.objects.get_or_create(name=tag)
 
         # Create articles and nested comments
-        for i in range(4):
-            author_id = i + 1 if i < 2 else 2
+
+        article_seed_path = Path(__file__).resolve(
+        ).parent.parent / "seed_data" / "article_seed_data.json"
+        with open(article_seed_path, 'r', encoding='utf-8') as f:
+            article_data = json.load(f)
+
+        for i, article_info in enumerate(article_data):
+            author_id = i + 1 if i < 2 else 2  # First two authored by id 1 & 2, rest by id 2
             authorProfile, _ = UserProfile.objects.get_or_create(id=author_id)
 
             article, _ = Article.objects.get_or_create(
                 author=authorProfile,
-                title=article_data[i]['title'],
-                content=article_data[i]['content'],
-                status=status_list[i]
+                title=article_info['title'],
+                defaults={
+                    'content': article_info['content'],
+                    'status': article_info.get('status', 'publish'),
+                }
             )
-            article.tags.add(*article_tags[i])
+            article.tags.set(article_info['tags'])  # Overwrites existing tags
             article.save()
+
 
             for j in range(3):
                 userProfile = regular_user if j % 2 == 0 else moderator_user
