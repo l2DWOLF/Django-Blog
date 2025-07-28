@@ -1,3 +1,64 @@
 desktop.ini
 django_blog/blog/django_blog_CW.code-workspace
 .vscode/PythonImportHelper-v2-Completion.json
+
+
+# Python
+__pycache__/
+*.py[cod]
+*.log
+*.pot
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Django
+*.sqlite3
+*.sqlite3-journal
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+static/
+.env
+.env.*
+
+# Venvs
+venv/
+env/
+.drf-venv/
+drf-venv/
+
+# VSCode
+.vscode/
+*.code-workspace
+PythonImportHelper-v2-Completion.json
+
+# OS-specific
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Coverage & testing
+htmlcov/
+.coverage
+.tox/
+.nox/
+.pytest_cache/
+
+# Build artifacts
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
