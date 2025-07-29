@@ -11,7 +11,7 @@ SECRET_KEY = config('APP_SECRET_KEY')
 DEBUG = False
 
 ALLOWED_HOSTS = ["127.0.0.1", "localhost", 
-                "django-blog-i0ni.onrender.com",
+                "django-blog-i0ni.onrender.com", "https://ie-blog.onrender.com/",
                 "10.100.102.4:5173", "10.100.102.4"]
 
 INSTALLED_APPS = [
@@ -52,6 +52,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "http://10.100.102.4:5173",
+    "https://ie-blog.onrender.com",
 ]
 
 ROOT_URLCONF = 'django_blog.urls'
