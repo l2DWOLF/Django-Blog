@@ -133,22 +133,22 @@ REST_FRAMEWORK = {
         'rest_framework.throttling.UserRateThrottle',
     ],
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '50000/day',
-        'user': '25000/day',
+        'anon': '1000/day',
+        'user': '5000/day',
 
-        'list_articles_user': '250/minute',
-        'list_articles_anon': '150/minute',
+        'list_articles_user': '60/minute',
+        'list_articles_anon': '30/minute',
 
-        'retrieve_article_user': '25/minute',
-        'retrieve_article_anon': '15/minute',
+        'retrieve_article_user': '20/minute',
+        'retrieve_article_anon': '10/minute',
 
-        'create_article_user': '5/hour',
-        'create_article_anon': '1/day',
+        'create_article_user': '10/hour',
+        'create_article_anon': '2/day',
 
-        'update_article_user': '20/minute',
+        'update_article_user': '30/hour',
         'update_article_anon': '1/day',
 
-        'delete_article_user': '10/minute',
+        'delete_article_user': '10/hour',
         'delete_article_anon': '1/day',
     },
 }
