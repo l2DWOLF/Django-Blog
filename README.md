@@ -5,15 +5,15 @@ A fully-featured **Blog API** built with Django Rest Framework and PostgreSQL, o
 ## 🌐 Live Deployment
 
 - **Frontend**: Hosted at [https://ie-blog.onrender.com](https://ie-blog.onrender.com)
-🔗 **Frontend Repo**: [https://github.com/l2DWOLF/IE-Blog](https://github.com/your-username/blog-frontend)
-
+- 🔗 **Frontend Repo**: [https://github.com/l2DWOLF/IE-Blog](https://github.com/your-username/blog-frontend)
 - **Backend API**: [https://django-blog-i0ni.onrender.com](https://django-blog-i0ni.onrender.com)
-- ✅ **Browsable API** available for easy testing and inspection.
+
 
 ## 🧪 API Demo
 
+- ✅ **Browsable API** available for easy testing and inspection.
 You can interact with the browsable API directly via:
-[https://django-blog-i0ni.onrender.com/api/](https://django-blog-i0ni.onrender.com/api/)
+- [https://django-blog-i0ni.onrender.com/api/](https://django-blog-i0ni.onrender.com/api/)
 
 Example request with curl:
     curl -X POST https://django-blog-i0ni.onrender.com/api/token/ \
